@@ -24,9 +24,14 @@ AUD = [ 'AUD_CAD','AUD_CHF','AUD_HKD','AUD_JPY','AUD_NZD','AUD_SGD','AUD_USD',
 
 
 
+u = 'AUD_CAD'
+
+u[4:7]
+
 
 def index( currency, symbols ):
     for sym in symbols:
+        r = instruments('EUR_USD',params)
         for i in range(periods):
             date = r['candles'][0]['time'][0:10]
             hour = int(r['candles'][13]['time'][11:13])
