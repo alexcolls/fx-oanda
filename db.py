@@ -23,7 +23,7 @@ metals = [  'XAG_AUD','XAG_CAD','XAG_CHF','XAG_EUR','XAG_GBP','XAG_HKD','XAG_JPY
             'XAU_GBP','XAU_HKD','XAU_JPY','XAU_NZD','XAU_SGD','XAU_USD','XAU_XAG']
 
 granularity = sys.argv[0]
-periods = sys.argv[1]
+periods = int(sys.argv[1])
 
 params = {
     'granularity': granularity,
