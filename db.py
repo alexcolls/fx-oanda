@@ -14,15 +14,16 @@ syms = ['AUD_CAD','AUD_CHF','AUD_HKD','AUD_JPY','AUD_NZD','AUD_SGD','AUD_USD',
         'EUR_USD','GBP_AUD','GBP_CAD','GBP_CHF','GBP_HKD','GBP_JPY','GBP_NZD',
         'GBP_SGD','GBP_USD','HKD_JPY','NZD_CAD','NZD_CHF','NZD_HKD','NZD_JPY',
         'NZD_SGD','NZD_USD','SGD_CHF','SGD_HKD','SGD_JPY','USD_CAD','USD_CHF',
-        'USD_HKD','USD_JPY','USD_SGD','XAG_AUD','XAG_CAD','XAG_CHF','XAG_EUR',
-        'XAG_GBP','XAG_HKD','XAG_JPY','XAG_NZD','XAG_SGD','XAG_USD','XAU_AUD',
-        'XAU_CAD','XAU_CHF','XAU_EUR','XAU_GBP','XAU_HKD','XAU_JPY','XAU_NZD',
-        'XAU_SGD','XAU_USD','XAU_XAG']
+        'USD_HKD','USD_JPY','USD_SGD']
 
-periods = 5000
+metals = [  'XAG_AUD','XAG_CAD','XAG_CHF','XAG_EUR','XAG_GBP','XAG_HKD','XAG_JPY',
+            'XAG_NZD','XAG_SGD','XAG_USD','XAU_AUD','XAU_CAD','XAU_CHF','XAU_EUR',
+            'XAU_GBP','XAU_HKD','XAU_JPY','XAU_NZD','XAU_SGD','XAU_USD','XAU_XAG']
+
+periods = 200
 
 params = {
-    'granularity': 'H1',
+    'granularity': 'D',
     'count': periods
 }
 
@@ -65,7 +66,7 @@ def index( currency ):
     df.to_csv('db/index/'+currency+'.csv', index=True)
 
 
-currencies = ['AUD','CAD','CHF','EUR','GBP','HKD','JPY','NZD','SGD','USD','XAG','XAU']
+currencies = ['AUD','CAD','CHF','EUR','GBP','HKD','JPY','NZD','SGD','USD']
 
 for curr in currencies:
     index(curr)
@@ -76,9 +77,8 @@ for i in range(1,len(currencies)):
     df = pd.merge(df,df2, on=['date','date'])
 
 df = df.fillna(0)
-df = df.set_index('date')
 print(df)
 
-
-
-
+pd.options.plotting.backend = "plotly"
+plt = df.plot(x='date', y=currencies)
+plt.show()
