@@ -4,7 +4,9 @@ from key import key
 
 from oandapyV20 import API
 import oandapyV20.endpoints.instruments as instruments
+from os import listdir
 import pandas as pd
+import sys
 
 client = API(access_token=key.token)
 
@@ -20,10 +22,11 @@ metals = [  'XAG_AUD','XAG_CAD','XAG_CHF','XAG_EUR','XAG_GBP','XAG_HKD','XAG_JPY
             'XAG_NZD','XAG_SGD','XAG_USD','XAU_AUD','XAU_CAD','XAU_CHF','XAU_EUR',
             'XAU_GBP','XAU_HKD','XAU_JPY','XAU_NZD','XAU_SGD','XAU_USD','XAU_XAG']
 
-periods = 200
+granularity = sys.argv[0]
+periods = sys.argv[1]
 
 params = {
-    'granularity': 'D',
+    'granularity': granularity,
     'count': periods
 }
 
@@ -32,13 +35,13 @@ def db( symbols ):
         print('Downloading '+sym+'...')
         r = instruments.InstrumentsCandles(sym,params)
         r = client.request(r)
-        df = pd.DataFrame()
-        ret = 0
-        for i in range(len(r['candles'])):
+        date = r['candles'][0]['time'][0:19]; ret = 0
+        df = pd.DataFrame({'date': date, 'return': round(ret,2)}, index=[0])
+        for i in range(1,len(r['candles'])):
             date = r['candles'][i]['time'][0:19]
             #date = r['candles'][i]['time'][0:10]
             #hour = int(r['candles'][i]['time'][11:13])
-            ret += (float(r['candles'][i]['mid']['c'])/float(r['candles'][i]['mid']['o'])-1)*100
+            ret = (float(r['candles'][i]['mid']['c'])/float(r['candles'][i]['mid']['o'])-1)*100
             #vol = round((float(r['candles'][i]['mid']['h'])/float(r['candles'][i]['mid']['l'])-1)*100, 2)
             add = pd.DataFrame({'date': date, 'return': round(ret,2)}, index=[0])
             df = pd.concat([df, add], ignore_index=True)
@@ -46,7 +49,7 @@ def db( symbols ):
         
 db(syms)
 
-from os import listdir
+currencies = ['AUD','CAD','CHF','EUR','GBP','HKD','JPY','NZD','SGD','USD']
 
 def index( currency ):
     print(currency+'...')
@@ -61,23 +64,20 @@ def index( currency ):
         df = pd.merge(df,df2, on=['date','date'])
     df = df.fillna(0)
     df = df.set_index('date')
-    df[currency] = round(df.sum(axis=1),2)
+    df[currency] = round(df.sum(axis=1)/len(currencies),2)
     df = df[currency]
     df.to_csv('db/index/'+currency+'.csv', index=True)
-
-
-currencies = ['AUD','CAD','CHF','EUR','GBP','HKD','JPY','NZD','SGD','USD']
 
 for curr in currencies:
     index(curr)
         
 df = pd.read_csv('db/index/'+currencies[0]+'.csv')
+df[currencies[0]] = df[currencies[0]].cumsum()
 for i in range(1,len(currencies)):
     df2 = pd.read_csv('db/index/'+currencies[i]+'.csv')
+    df2[currencies[i]] = df2[currencies[i]].cumsum()
     df = pd.merge(df,df2, on=['date','date'])
 
-df = df.fillna(0)
-print(df)
 
 pd.options.plotting.backend = "plotly"
 plt = df.plot(x='date', y=currencies)
