@@ -5,7 +5,9 @@ from key import key
 from oandapyV20 import API
 import oandapyV20.endpoints.instruments as instruments
 from os import listdir
+import matplotlib.pyplot as plt
 import pandas as pd
+import seaborn as sns
 import sys
 
 client = API(access_token=key.token)
@@ -22,8 +24,8 @@ metals = [  'XAG_AUD','XAG_CAD','XAG_CHF','XAG_EUR','XAG_GBP','XAG_HKD','XAG_JPY
             'XAG_NZD','XAG_SGD','XAG_USD','XAU_AUD','XAU_CAD','XAU_CHF','XAU_EUR',
             'XAU_GBP','XAU_HKD','XAU_JPY','XAU_NZD','XAU_SGD','XAU_USD','XAU_XAG']
 
-granularity = sys.argv[0]
-periods = int(sys.argv[1])
+granularity = str(sys.argv[1])
+periods = int(sys.argv[2])
 
 params = {
     'granularity': granularity,
@@ -80,5 +82,11 @@ for i in range(1,len(currencies)):
 
 
 pd.options.plotting.backend = "plotly"
-plt = df.plot(x='date', y=currencies)
+plot = df.plot(x='date', y=currencies)
+plot.show()
+
+matrix = df.corr()
+hm = sns.heatmap(matrix, annot = True)
+hm.set(title = "FX G10 Correlation Matrix\n")
 plt.show()
+
