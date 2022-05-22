@@ -1,8 +1,7 @@
 
 import pandas as pd
-import scipy.signal as signal
 from os import listdir
-import sys
+import scipy.signal as signal
 
 
 def LowPass(currency):
@@ -82,5 +81,4 @@ for file in files:
         # append to dataframe
         df.loc[len(df.index)] = [index, trend, sig]
 
-    df = df.set_index('date')
-    df.to_csv('db/signals/'+file, index=True)
+    df.to_csv('db/signals/'+file, index=False)

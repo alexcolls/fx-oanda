@@ -18,7 +18,7 @@ plt = df.plot(x='date', y=currencies)
 plt.show()
 
 matrix = df.corr()
-fig = px.imshow(matrix, text_auto=True, aspect='auto')
+fig = px.imshow(matrix, text_auto=True)
 fig.show()
 
 
