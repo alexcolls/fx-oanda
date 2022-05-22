@@ -6,7 +6,7 @@ How to use:
 1. Run in the project directory the following commands:
 
 ```console
-> python db.py [granularity] [periods]
+python db.py [granularity] [periods]
 ```
 
 Example:
