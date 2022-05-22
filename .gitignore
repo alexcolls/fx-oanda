@@ -1,2 +1,3 @@
 # ignore token for security
 model/key/key.py
+bin/key.py

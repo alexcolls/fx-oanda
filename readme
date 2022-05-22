@@ -1,0 +1,12 @@
+
+FX G10 Trading Index Model with Oanda Broker
+
+1. model
+
+In the model folder you'll find the strategy backtesting.
+
+2. bin
+
+In the bin folder you'll find the trading system.
+
+WARNING: If you are trading in a real account make sure you know what you are doing. All gains or losses caused by the system will be under your responsability.
