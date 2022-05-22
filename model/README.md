@@ -35,3 +35,10 @@ python backtest.py
 - For performance reasons each currency pair is backtested after pressing enter. Follow the console instructions. 
 - You can play with the fee parameter in the script.
 
+
+
+In the folder you have some scripts I made during the strategy development process. Only for testing purpose.
+
+In the folder bin you have the trading system ready to deploy. Just modify the parameters in the params.py file.
+
+WARNING: If you are trading in a real account make sure you know what you are doing. All gains or losses caused by the system will be under your responsability.
