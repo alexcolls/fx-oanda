@@ -33,6 +33,5 @@ python backtest.py
 ```
 
 - For performance reasons each currency pair is backtested after pressing enter. Follow the console instructions. 
-
-- You can play with the fee parameter.
+- You can play with the fee parameter in the script.
 
