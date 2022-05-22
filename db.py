@@ -1,18 +1,16 @@
 
-# create a file named key.py with token = 'your_oanda_token'
+# create a file named key.py with token = 'your_oanda_token' in the key folder
 from key import key
 
 from oandapyV20 import API
 import oandapyV20.endpoints.instruments as instruments
 from os import listdir
-import matplotlib.pyplot as plt
 import pandas as pd
-import seaborn as sns
 import sys
 
 client = API(access_token=key.token)
 
-#
+# pairs to request to oanda
 syms = ['AUD_CAD', 'AUD_CHF', 'AUD_HKD', 'AUD_JPY', 'AUD_NZD', 'AUD_SGD', 'AUD_USD',
         'CAD_CHF', 'CAD_HKD', 'CAD_JPY', 'CAD_SGD', 'CHF_HKD', 'CHF_JPY', 'EUR_AUD',
         'EUR_CAD', 'EUR_CHF', 'EUR_GBP', 'EUR_HKD', 'EUR_JPY', 'EUR_NZD', 'EUR_SGD',
@@ -53,7 +51,6 @@ def db(symbols):
 
 db(syms)
 
-currencies = ['AUD', 'CAD', 'CHF', 'EUR', 'GBP', 'HKD', 'JPY', 'NZD', 'SGD', 'USD']
 
 def index(currency):
     print('Creating '+currency+'...')
@@ -75,6 +72,9 @@ def index(currency):
     df.to_csv('db/index/'+currency+'.csv', index=True)
 
 
+currencies = ['AUD', 'CAD', 'CHF', 'EUR',
+              'GBP', 'HKD', 'JPY', 'NZD', 'SGD', 'USD']
+
 for curr in currencies:
     index(curr)
 
@@ -85,8 +85,4 @@ for i in range(1, len(currencies)):
     #df2[currencies[i]] = df2[currencies[i]].cumsum()
     df = pd.merge(df, df2, on=['date', 'date'])
 
-
-matrix = df.corr()
-hm = sns.heatmap(matrix, annot=True)
-hm.set(title="FX G10 Correlation Matrix\n")
-plt.show()
+print('db updated!')

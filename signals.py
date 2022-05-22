@@ -1,10 +1,8 @@
 
 import pandas as pd
 import scipy.signal as signal
+from os import listdir
 import sys
-
-base_currency = sys.argv[1]
-term_currency = sys.argv[2]
 
 
 # buterworth filter parameters
@@ -12,8 +10,9 @@ N = 2  # filter order
 Wn = 0.3  # cutoff frequency
 B, A = signal.butter(N, Wn, output='ba')
 
-def LowPass( B, A, Currency ):
-    # get currency index from db 
+
+def LowPass(B, A, Currency):
+    # get currency index from db
     df = pd.read_csv('db/index/'+Currency+'.csv')
     # cumulative sum to create trend
     df[Currency] = round(df[Currency].cumsum(), 2)
@@ -22,16 +21,13 @@ def LowPass( B, A, Currency ):
     return df
 
 
+currencies = ['AUD', 'CAD', 'CHF', 'EUR',
+              'GBP', 'HKD', 'JPY', 'NZD', 'SGD', 'USD']
 
+files = [k for k in listdir('db/pairs') if currency in k]
 
 
 # create signal
-
-perf = pd.DataFrame()
-perf['date'] = data['date']
-performance = 0
-
-
 trend_base = 0
 trend_term = 0
 last_basef = 0

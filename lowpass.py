@@ -41,14 +41,6 @@ plt = data.plot(x='date', y=[base_currency, base_currency+'f',
                 base_currency+'s', term_currency, term_currency+'f', term_currency+'s'])
 plt.show()
 
-
-# create signal
-
-perf = pd.DataFrame()
-perf['date'] = data['date']
-performance = 0
-
-
 trend_base = 0
 trend_term = 0
 last_basef = 0
@@ -56,7 +48,6 @@ last_termf = 0
 signal = 0
 signal_slow = 0
 alpha = 0
-
 
 for index, row in data.iterrows():
 
