@@ -5,70 +5,82 @@ from os import listdir
 import sys
 
 
-# buterworth filter parameters
-N = 2  # filter order
-Wn = 0.3  # cutoff frequency
-B, A = signal.butter(N, Wn, output='ba')
-
-
-def LowPass(B, A, Currency):
+def LowPass(currency):
+    # buterworth filter parameters
+    N = 2  # filter order
+    Wn = 0.3  # cutoff frequency
+    B, A = signal.butter(N, Wn, output='ba')
     # get currency index from db
-    df = pd.read_csv('db/index/'+Currency+'.csv')
+    df = pd.read_csv('db/index/'+currency+'.csv')
     # cumulative sum to create trend
-    df[Currency] = round(df[Currency].cumsum(), 2)
+    df[currency] = round(df[currency].cumsum(), 2)
     # apply lowpass filter
-    df[Currency+'f'] = signal.filtfilt(B, A, df[Currency])
+    df[currency+'f'] = signal.filtfilt(B, A, df[currency])
     return df
 
 
 currencies = ['AUD', 'CAD', 'CHF', 'EUR',
               'GBP', 'HKD', 'JPY', 'NZD', 'SGD', 'USD']
 
-files = [k for k in listdir('db/pairs') if currency in k]
+files = [k for k in listdir('db/pairs')]
 
+for file in files:
 
-# create signal
-trend_base = 0
-trend_term = 0
-last_basef = 0
-last_termf = 0
-signal = 0
-signal_slow = 0
-alpha = 0
+    x = file[0:3]  # base name
+    y = file[4:7]  # term name
 
+    base = LowPass(x)
+    term = LowPass(y)
+    # merge two currencies
+    data = pd.merge(base, term, on=['date', 'date'])
+    data = data.set_index('date')
+    print(data)
 
-for index, row in data.iterrows():
+    # base (x), term (y)
+    x0f = 0  #
+    y0f = 0  # current lowpass filter value
+    x1f = 0  #
+    y1f = 0  # last lowpass filter value
+    xt = 0  #
+    yt = 0  # trend indicator
+    sig = 0  # signal
 
-    if row[base_currency+'f'] > last_basef:
-        trend_base = 1
-    elif row[base_currency+'f'] < last_basef:
-        trend_base = -1
-    else:
-        trend_base = 0
-    last_basef = row[base_currency+'f']
+    df = pd.DataFrame(columns=['date', 'trend', 'signal'])
 
-    if row[term_currency+'f'] > last_termf:
-        trend_term = 1
-    elif row[term_currency+'f'] < last_termf:
-        trend_term = -1
-    else:
-        trend_term = 0
-    last_term = row[term_currency+'f']
+    for index, row in data.iterrows():
+        # base trend indicator
+        x0f = row[x+'f']
+        if x0f > x1f:
+            xt = 1
+        elif x0f < x1f:
+            xt = -1
+        else:
+            xt = 0
+        x1f = x0f
 
-    trend = trend_base + trend_term
+        # term trend indicator
+        y0f = row[y+'f']
+        if y0f > y1f:
+            yt = 1
+        elif y0f < y1f:
+            yt = -1
+        else:
+            yt = 0
+        y1f = y0f
 
-    if row[base_currency] > row[base_currency+'f'] and row[term_currency] < row[term_currency+'f']:
-        signal = -1
-    elif row[base_currency] < row[base_currency+'f'] and row[term_currency] > row[term_currency+'f']:
-        signal = 1
-    else:
-        signal = 0
+        # pair trend
+        trend = xt - yt
 
-    alpha = trend + signal
-    print(row['date'], alpha)
+        # signal
+        if row[x] > x0f and row[y] < y0f:
+            sig = -1
+        elif row[x] < x0f and row[y] > y0f:
+            sig = 1
+        else:
+            sig = 0
 
+        # append to dataframe
+        df.loc[len(df.index)] = [index, trend, sig]
 
-matrix = df.corr()
-hm = sns.heatmap(matrix, annot=True)
-hm.set(title="FX G10 Correlation Matrix\n")
-plt.show()
+    df = df.set_index('date')
+    df.to_csv('db/signals/'+file, index=True)
