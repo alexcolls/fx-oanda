@@ -19,9 +19,10 @@ syms = ['AUD_CAD', 'AUD_CHF', 'AUD_HKD', 'AUD_JPY', 'AUD_NZD', 'AUD_SGD', 'AUD_U
         'NZD_SGD', 'NZD_USD', 'SGD_CHF', 'SGD_HKD', 'SGD_JPY', 'USD_CAD', 'USD_CHF',
         'USD_HKD', 'USD_JPY', 'USD_SGD']
 
-granularity = str(sys.argv[1])
-periods = int(sys.argv[2])
+granularity = str(sys.argv[1])  # input 1
+periods = int(sys.argv[2])  # input 2
 
+# oanda params
 params = {
     'granularity': granularity,
     'count': periods
