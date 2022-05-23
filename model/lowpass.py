@@ -18,7 +18,7 @@ Wn = 0.1  # Cutoff frequency
 Bs, As = signal.butter(N, Wn, output='ba')
 
 # Apply the filter to base currency
-base = pd.read_csv('../db/index/'+base_currency+'.csv')
+base = pd.read_csv('index/'+base_currency+'.csv')
 base[base_currency] = round(base[base_currency].cumsum(), 2)
 # lowpass filter fast
 base[base_currency+'f'] = signal.filtfilt(Bf, Af, base[base_currency])
@@ -26,7 +26,7 @@ base[base_currency+'f'] = signal.filtfilt(Bf, Af, base[base_currency])
 base[base_currency+'s'] = signal.filtfilt(Bs, As, base[base_currency])
 
 # Apply the filter to term currency
-term = pd.read_csv('../db/index/'+term_currency+'.csv')
+term = pd.read_csv('index/'+term_currency+'.csv')
 term[term_currency] = round(term[term_currency].cumsum(), 2)
 # lowpass filter fast
 term[term_currency+'f'] = signal.filtfilt(Bf, Af, term[term_currency])
