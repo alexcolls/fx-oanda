@@ -18,9 +18,6 @@ def LowPass(currency):
     return df
 
 
-currencies = ['AUD', 'CAD', 'CHF', 'EUR',
-              'GBP', 'HKD', 'JPY', 'NZD', 'SGD', 'USD']
-
 files = [k for k in listdir('db/pairs')]
 
 for file in files:
@@ -82,3 +79,20 @@ for file in files:
         df.loc[len(df.index)] = [index, trend, sig]
 
     df.to_csv('db/signals/'+file, index=False)
+
+
+# check if there is currently a signal
+
+files = [k for k in listdir('db/signals')]
+
+for file in files:
+
+    df = pd.read_csv('db/signals/'+file)
+    df = df.tail(1).reset_index()
+
+    if df['trend'][0] == -2 and df['signal'][0] == -1:
+        print('\n', df['date'][0], file[0:7], 'SELL')
+    elif df['trend'][0] == 2 and df['signal'][0] == 1:
+        print('\n', df['date'][0], file[0:7], 'BUY')
+
+print('\n')
