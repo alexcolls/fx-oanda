@@ -1,5 +1,4 @@
 from os import listdir
-from matplotlib.pyplot import title
 import pandas as pd
 
 
@@ -25,7 +24,7 @@ for file in files:
 
     for index, row in data.iterrows():
 
-        ret = row['return']
+        ret = float(row['return'])
 
         if trend == 2:
             a = ret-fee
@@ -53,15 +52,17 @@ for file in files:
         trend = row['trend']
         sig = row['signal']
 
+    perf = perf.set_index('date')
+
     perf['trend'] = round(perf['trend'].cumsum(), 2)
     perf['signal'] = round(perf['signal'].cumsum(), 2)
     perf['trend+signal'] = round(perf['trend+signal'].cumsum(), 2)
     perf['return'] = round(perf['return'].cumsum(), 2)
 
-    perf.to_csv('db/backtest/'+file, index=False)
+    perf.to_csv('db/backtest/'+file, index=True)
 
     pd.options.plotting.backend = "plotly"
-    plt = perf.plot(x='date', y=perf.columns, title=file[0:7])
+    plt = perf.plot(x=perf.index, y=perf.columns, title=file[0:7])
     plt.show()
 
     print(file[0:7])

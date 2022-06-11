@@ -1,7 +1,11 @@
 
+from time import time
 import pandas as pd
 from os import listdir
 import scipy.signal as signal
+import sys
+
+timeframe = str(sys.argv[1])
 
 
 def LowPass(currency):
@@ -10,7 +14,7 @@ def LowPass(currency):
     Wn = 0.3  # cutoff frequency
     B, A = signal.butter(N, Wn, output='ba')
     # get currency index from db
-    df = pd.read_csv('db/index/'+currency+'.csv')
+    df = pd.read_csv('db/indexes/'+timeframe+'/'+currency+'.csv')
     # cumulative sum to create trend
     df[currency] = round(df[currency].cumsum(), 2)
     # apply lowpass filter
@@ -18,7 +22,7 @@ def LowPass(currency):
     return df
 
 
-files = [k for k in listdir('db/pairs')]
+files = [k for k in listdir('db/instruments/'+timeframe)]
 
 for file in files:
 
@@ -68,9 +72,9 @@ for file in files:
         trend = xt - yt
 
         # signal
-        if row[x] > x0f and row[y] < y0f:
+        if row[x] > x1f and row[y] < y1f:
             sig = -1
-        elif row[x] < x0f and row[y] > y0f:
+        elif row[x] < x1f and row[y] > y1f:
             sig = 1
         else:
             sig = 0
@@ -78,16 +82,16 @@ for file in files:
         # append to dataframe
         df.loc[len(df.index)] = [index, trend, sig]
 
-    df.to_csv('db/signals/'+file, index=False)
+    df.to_csv('db/signals/'+timeframe+'/'+file, index=False)
 
 
 # check if there is currently a signal
 
-files = [k for k in listdir('db/signals')]
+files = [k for k in listdir('db/signals/'+timeframe)]
 
 for file in files:
 
-    df = pd.read_csv('db/signals/'+file)
+    df = pd.read_csv('db/signals/'+timeframe+'/'+file)
     df = df.tail(1).reset_index()
 
     if df['trend'][0] == -2 and df['signal'][0] == -1:
