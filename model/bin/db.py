@@ -13,8 +13,6 @@ import sys
 # create a file named key.py with token = 'your_oanda_token' in the key folder
 from key import key
 
-client = API(access_token=key.token)
-
 symbols = ['AUD_CAD', 'AUD_CHF', 'AUD_HKD', 'AUD_JPY', 'AUD_NZD', 'AUD_SGD', 'AUD_USD',
            'CAD_CHF', 'CAD_HKD', 'CAD_JPY', 'CAD_SGD', 'CHF_HKD', 'CHF_JPY', 'EUR_AUD',
            'EUR_CAD', 'EUR_CHF', 'EUR_GBP', 'EUR_HKD', 'EUR_JPY', 'EUR_NZD', 'EUR_SGD',
@@ -25,6 +23,8 @@ symbols = ['AUD_CAD', 'AUD_CHF', 'AUD_HKD', 'AUD_JPY', 'AUD_NZD', 'AUD_SGD', 'AU
 
 
 def importdb(year, symbols, make_indexes):
+
+    client = API(access_token=key.token)
 
     # extract currencies (ccys)
     ccys = []
@@ -56,6 +56,7 @@ def importdb(year, symbols, make_indexes):
 
         return pd.DataFrame(index=dates, columns=symbols)
 
+    # loop years
     more = True
     while more:
 
@@ -104,7 +105,7 @@ def importdb(year, symbols, make_indexes):
                         prices[sym][i] = prices[sym][i+1]
 
         # create instruments db
-        path = 'db/instruments/'+str(year)+'/'
+        path = 'bin/db/instruments/'+str(year)+'/'
         Path(path).mkdir(parents=True, exist_ok=True)
         prices.to_csv(path+'prices.csv', index=True)
         changs.to_csv(path+'changs.csv', index=True)
@@ -133,16 +134,32 @@ def importdb(year, symbols, make_indexes):
                     idx_vo[ccy][dt] = round(idx_vo[ccy][dt] / n, 2)
 
             # create indexes db
-            path = 'db/indexes/'+str(year)+'/'
+            path = 'bin/db/indexes/'+str(year)+'/'
             Path(path).mkdir(parents=True, exist_ok=True)
             idx_ch.to_csv(path+'changs.csv', index=True)
             idx_vo.to_csv(path+'volats.csv', index=True)
 
-        print(year, ' upadted!')
+            # plotting ccy indexes returns
+            plt = idx_ch.plot(x=idx_ch.index, y=idx_ch.columns,
+                              height=400, title='CURRENCY INDEXES RETURNS '+str(year))
+            plt.show()
+
+            # plotting ccy indexes cumulative returns
+            cum_idxs = idx_ch.cumsum()
+            plt = cum_idxs.plot(x=idx_ch.index, y=idx_ch.columns, height=600,
+                                title='CURRENCY INDEXES CUMMULATIVE RETURNS '+str(year))
+            plt.show()
+
+            # plotting ccy indexes volatility
+            plt = idx_vo.plot.bar(x=idx_vo.index, y=idx_vo.columns,
+                                  height=400, title='CURRENCY INDEXES VOLATILITY '+str(year))
+            plt.show()
+
+        print(year, 'imported!')
 
         year += 1
 
 
 if __name__ == '__main__':
     importdb(int(sys.argv[1]), symbols, True)
-    print('history db updated!')
+    print('\ndb history updated!')
