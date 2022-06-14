@@ -9,6 +9,7 @@ from pathlib import Path
 from numpy import isnan
 import pandas as pd
 import sys
+
 # create a file named key.py with token = 'your_oanda_token' in the key folder
 from key import key
 
@@ -25,16 +26,16 @@ symbols = ['AUD_CAD', 'AUD_CHF', 'AUD_HKD', 'AUD_JPY', 'AUD_NZD', 'AUD_SGD', 'AU
 
 def importdb(year, symbols, make_indexes):
 
-    # extract currencies (crxs)
-    crxs = []
+    # extract currencies (ccys)
+    ccys = []
     if make_indexes:
         for sym in symbols:
             p = sym.split('_')
-            if len(p[0]) == 3 and p[0] not in crxs:
-                crxs.append(p[0])
-            if len(p[1]) == 3 and p[1] not in crxs:
-                crxs.append(p[1])
-            crxs.sort()
+            if len(p[0]) == 3 and p[0] not in ccys:
+                ccys.append(p[0])
+            if len(p[1]) == 3 and p[1] not in ccys:
+                ccys.append(p[1])
+            ccys.sort()
 
     # prepare dataframe
     def prepdf(year):
@@ -111,25 +112,25 @@ def importdb(year, symbols, make_indexes):
 
         if make_indexes:
             # make currency indices (idx)
-            idx_ch = pd.DataFrame(index=prices.index, columns=crxs)
-            idx_vo = pd.DataFrame(index=prices.index, columns=crxs)
+            idx_ch = pd.DataFrame(index=prices.index, columns=ccys)
+            idx_vo = pd.DataFrame(index=prices.index, columns=ccys)
 
             for dt in idx_ch.index:
-                for crx in idx_ch.columns:
+                for ccy in idx_ch.columns:
                     n = 0
-                    idx_ch[crx][dt] = 0
-                    idx_vo[crx][dt] = 0
+                    idx_ch[ccy][dt] = 0
+                    idx_vo[ccy][dt] = 0
                     for sym in symbols:
-                        if sym[0:3] == crx:
-                            idx_ch[crx][dt] += changs[sym][dt]
-                            idx_vo[crx][dt] += volats[sym][dt]
+                        if sym[0:3] == ccy:
+                            idx_ch[ccy][dt] += changs[sym][dt]
+                            idx_vo[ccy][dt] += volats[sym][dt]
                             n += 1
-                        elif sym[4:7] == crx:
-                            idx_ch[crx][dt] -= changs[sym][dt]
-                            idx_vo[crx][dt] += volats[sym][dt]
+                        elif sym[4:7] == ccy:
+                            idx_ch[ccy][dt] -= changs[sym][dt]
+                            idx_vo[ccy][dt] += volats[sym][dt]
                             n += 1
-                    idx_ch[crx][dt] = round(idx_ch[crx][dt] / n, 2)
-                    idx_vo[crx][dt] = round(idx_vo[crx][dt] / n, 2)
+                    idx_ch[ccy][dt] = round(idx_ch[ccy][dt] / n, 2)
+                    idx_vo[ccy][dt] = round(idx_vo[ccy][dt] / n, 2)
 
             # create indexes db
             path = 'db/indexes/'+str(year)+'/'
