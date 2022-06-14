@@ -51,6 +51,7 @@ def importdb(year, symbols, make_indexes):
         for dt in daterange(start_dt, end_dt):
             if dt.weekday() not in weekdays:
                 dates.append(dt.strftime("%Y-%m-%d"))
+        symbols.sort()
 
         return pd.DataFrame(index=dates, columns=symbols)
 
