@@ -147,7 +147,7 @@ def importdb(year, symbols, make_indexes):
             # plotting ccy indexes cumulative returns
             cum_idxs = idx_ch.cumsum()
             plt = cum_idxs.plot(x=idx_ch.index, y=idx_ch.columns, height=600,
-                                title='CURRENCY INDEXES CUMMULATIVE RETURNS '+str(year))
+                                title='CURRENCY INDEXES CUMULATIVE RETURNS '+str(year))
             plt.show()
 
             # plotting ccy indexes volatility
