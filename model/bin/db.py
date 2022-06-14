@@ -2,6 +2,8 @@
 # usage: python db.py [year-to-start]
 # credits: Quantium Rock
 
+# INSERT YOUT OANDA TOKEN IN ./Key/key.py
+from key import key
 from oandapyV20 import API
 import oandapyV20.endpoints.instruments as instruments
 from datetime import timedelta, date, datetime
@@ -9,9 +11,6 @@ from pathlib import Path
 from numpy import isnan
 import pandas as pd
 import sys
-
-# create a file named key.py with token = 'your_oanda_token' in the key folder
-from key import key
 
 symbols = ['AUD_CAD', 'AUD_CHF', 'AUD_HKD', 'AUD_JPY', 'AUD_NZD', 'AUD_SGD', 'AUD_USD',
            'CAD_CHF', 'CAD_HKD', 'CAD_JPY', 'CAD_SGD', 'CHF_HKD', 'CHF_JPY', 'EUR_AUD',
