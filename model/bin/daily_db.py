@@ -1,9 +1,10 @@
 # script to update de database
-# usage: python db.py [year-to-start]
+# usage: python daily_db.py [year-to-start]
+# timeframe: Daily (D)
 # credits: Quantium Rock
 
 # INSERT YOUT OANDA TOKEN IN ./Key/key.py
-from key import key
+from key import keys
 from oandapyV20 import API
 import oandapyV20.endpoints.instruments as instruments
 from datetime import timedelta, date, datetime
@@ -104,7 +105,7 @@ def importdb(year, symbols, make_indexes):
                         prices[sym][i] = prices[sym][i+1]
 
         # create instruments db
-        path = 'bin/db/instruments/'+str(year)+'/'
+        path = 'bin/db/D/instruments/'+str(year)+'/'
         Path(path).mkdir(parents=True, exist_ok=True)
         prices.to_csv(path+'prices.csv', index=True)
         changs.to_csv(path+'changs.csv', index=True)
@@ -133,7 +134,7 @@ def importdb(year, symbols, make_indexes):
                     idx_vo[ccy][dt] = round(idx_vo[ccy][dt] / n, 2)
 
             # create indexes db
-            path = 'bin/db/indexes/'+str(year)+'/'
+            path = 'bin/db/D/indexes/'+str(year)+'/'
             Path(path).mkdir(parents=True, exist_ok=True)
             idx_ch.to_csv(path+'changs.csv', index=True)
             idx_vo.to_csv(path+'volats.csv', index=True)
