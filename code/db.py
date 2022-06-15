@@ -1,7 +1,5 @@
 
-# create a file named key.py with token = 'your_oanda_token' in the key folder
-from key import key
-
+import key
 from oandapyV20 import API
 import oandapyV20.endpoints.instruments as instruments
 from os import listdir
