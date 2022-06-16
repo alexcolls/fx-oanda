@@ -4,7 +4,7 @@
 # credits: Quantium Rock
 
 # INSERT YOUT OANDA TOKEN IN ./Key/key.py
-from key import keys
+from key import key
 from oandapyV20 import API
 import oandapyV20.endpoints.instruments as instruments
 from datetime import timedelta, date, datetime
@@ -24,7 +24,7 @@ symbols = ['AUD_CAD', 'AUD_CHF', 'AUD_HKD', 'AUD_JPY', 'AUD_NZD', 'AUD_SGD', 'AU
 
 def importdb(year, symbols, make_indexes):
 
-    client = API(access_token=key.token)
+    api = API(access_token=key.token)
 
     # extract currencies (ccys)
     ccys = []
@@ -79,7 +79,7 @@ def importdb(year, symbols, make_indexes):
         # import from oanda
         for sym in symbols:
             r = instruments.InstrumentsCandles(sym, params)
-            r = client.request(r)
+            r = api.request(r)
             for p in r['candles']:
                 dtime = datetime.strftime(datetime.strptime(
                     p['time'][0:10], '%Y-%m-%d') + timedelta(days=1), '%Y-%m-%d')
