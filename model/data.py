@@ -3,6 +3,8 @@ import json
 import requests
 import pandas as pd
 
+import oandapyV20.endpoints.forexlabs as labs
+
 import __key__
 import __symbols__
 
@@ -30,64 +32,66 @@ class OandaApi:
 
         self.client = requests.Session()
         self.client.headers['Authorization'] = 'Bearer '+ TOKEN
-        self.candles = self.Candles()
+        # self.prices = self.Prices()
 
-    def Candles( self, symbols=__symbols__.SYMBOLS, timeframe='S5', from_date='2022-01-01', version='v3'  ):
 
-        candles = {}
+    def Prices( self, symbols=__symbols__.SYMBOLS, timeframe='S5', from_date='2022-01-01', version='v3' ):
 
         for symbol in symbols:
 
             print(symbol)
 
-            asks = { 'dt': [], 'o': [], 'h': [], 'l': [], 'c':[], 'v': [] }
-            bids = { 'dt': [], 'o': [], 'h': [], 'l': [], 'c':[], 'v': [] }
+            data = { 'dt': [], 'ask': [], 'bid': [], 'vol': [] }
 
             start_date = from_date
 
             while True:
 
-                req = self.client.get(f'https://api-fxpractice.oanda.com/{version}/instruments/{symbol}/candles?count=5000&price=BA&granularity={timeframe}&from={start_date}')
+                req = self.client.get(f'{self.enviroment}/{version}/instruments/{symbol}/candles?count=5000&price=BA&granularity={timeframe}&from={start_date}')
             
                 req = json.loads(req.content.decode('utf-8'))['candles']
 
                 for x in req:
-                    asks['dt'].append(x['time'])
-                    asks['o'].append(float(x['ask']['o']))
-                    asks['h'].append(float(x['ask']['h']))
-                    asks['l'].append(float(x['ask']['l']))
-                    asks['c'].append(float(x['ask']['c']))
-                    asks['v'].append(float(x['ask']['c']))
-
-                    bids['dt'].append(x['time'])
-                    bids['o'].append(float(x['bid']['o']))
-                    bids['h'].append(float(x['bid']['h']))
-                    bids['l'].append(float(x['bid']['l']))
-                    bids['c'].append(float(x['bid']['c']))
-                    bids['v'].append(float(x['bid']['c']))
-        
-                if start_date == asks['dt'][-1]:
+                    data['dt'].append(x['time'])
+                    data['vol'].append(int(x['volume']))
+                    for p in ['ask', 'bid']:
+                        o = float(x[p]['o'])
+                        h = float(x[p]['h'])
+                        l = float(x[p]['l'])
+                        c = float(x[p]['c'])
+                        data[p].append((o+h+l+c*2)/5)
+                    
+                if start_date == data['dt'][-1]:
                     del req
                     break
 
-                start_date = asks['dt'][-1]
+                start_date = data['dt'][-1]
     
-            asks = pd.DataFrame.from_dict(asks)
-            asks.dt = pd.to_datetime(asks.dt)
-            asks = asks.set_index('dt')
-            bids = pd.DataFrame.from_dict(bids)
-            bids.dt = pd.to_datetime(bids.dt)
-            bids = bids.set_index('dt')
-
-            candles[symbol] = { 'asks': asks, 'bids': bids }
+            data = pd.DataFrame.from_dict(data)
+            data.dt = pd.to_datetime(data.dt)
+            data = data.set_index('dt')
+            data = data[~data.index.duplicated(keep='first')]        
             
-            del asks, bids
+            self.prices[symbol] = data
+
+            del data
+
+        return self.prices
+
+
+    def CoT ( self, symbol='EUR_USD', version='v3' ):
         
-        self.candles = candles
+        req = self.client.get(f'{self.enviroment}/labs/{version}/commitments_of_traders?instrument={symbol}')
+        
+        req = json.loads(req.content.decode('utf-8'))[symbol]
 
-        del candles
+        data = { 'dt': [], 'price': [], 'bid': [], 'vol': [] }
 
-        return self.candles
+        for x in req:
+            data['dt'].append(pd.to_datetime(x['date']))
+
+
+        return req
 
 
 oanda = OandaApi()
