@@ -1,19 +1,23 @@
 
-import __key__
+# OANDA BROKER REST API
+
+# config files
+import __auth__
 import __symbols__
 
-import json
+# dependencies
 import requests
-import pandas as pd
+import json
 from pathlib import Path
-
 from datetime import datetime
 from datetime import timedelta
+import pandas as pd
 
-# OANDA BROKER DATA-FEED API
+# API CLIENT
 
 class OandaApi:
 
+    # url constants
     ENVIRONMENTS = {
         "no_trading": {
             "stream": 'https://stream-fxpractice.oanda.com',
@@ -25,46 +29,62 @@ class OandaApi:
         }
     }
 
-    def __init__  ( self, LIVE_TRADING=False,  TOKEN=__key__.TOKEN ):
+    def __init__  ( self, LIVE_TRADING=False,  TOKEN=__auth__.TOKEN ):
         
+        # set trading enviroment
         self.enviroment = self.ENVIRONMENTS['no_trading']['api']
         if LIVE_TRADING:
             self.enviroment = self.ENVIRONMENTS['live']
 
+        # set request session  and add authentification metadata
         self.client = requests.Session()
         self.client.headers['Authorization'] = 'Bearer '+ TOKEN
-        # self.prices = self.getPrices()
 
+    #__ OandaApi.getWeeksOfYear(2022)
+        """ 
+            ,input = year
+            ,download candles (bid/ask), min granularity = 5 seconds
+            ,for each symbol in the portfolio, by default __symbols__.SYMBOLS
+            ,from the first monday to the last friday[-2] of the year
+            ,group all symbols data by weeks
+            ,store each week locally
+         """
+    def getWeeksOfYear (  self, year, symbols=__symbols__.SYMBOLS, api_version='v3' ):
 
-    def getYearsWeeks (  self, year=2017, symbols=__symbols__.SYMBOLS, api_version='v3' ):
+        """       
+            # get last friday of the year
+            last_friday = timedelta( days=( 3 + datetime.strptime(str(year+1), '%Y').weekday() ))
+            last_friday = datetime.strptime(str(year+1), '%Y') - last_friday
+        """
 
         # get first monday of the year
-        first_monday = timedelta( days=( 7 - datetime.strptime(str(year), '%Y').weekday() ) )
+        first_monday = timedelta( days=( 7 - datetime.strptime(str(year), '%Y').weekday() ))
         first_monday = datetime.strptime(str(year), '%Y') + first_monday
 
-        # get last friday of the year
-        last_friday = timedelta(days=( 3 + datetime.strptime(str(year+1), '%Y').weekday()) )
-        last_friday = datetime.strptime(str(year+1), '%Y') - last_friday
-
+        # get all mondays of the year
         mondays = [ first_monday + timedelta(weeks=i) for i in range(51) ]
 
+        # check mondays dates and add utc timezone
         for i, monday in enumerate(mondays):
             if monday.weekday() == 0:
                 mondays[i] = datetime.strftime(monday, '%Y-%m-%d') + 'T00:00:00.000000000Z'
             else:
                 print('Its not a Monday!', i)
 
-        wk = 0
+        wk = 0 # init weeks counter
         
+        # iterate on each monday of the year (weeks)
         for monday in mondays:
 
             wk += 1
-
+            # init weekly dataframes
             asks = pd.DataFrame()
             bids = pd.DataFrame()
 
+            # iterate each __symbols__.SYMBOL to get a full week data each
             for symbol in symbols:
 
+                # 
                 print(symbol, 'week ', wk)
 
                 data = { 'dt': [], 'ask': [], 'bid': [] }
@@ -79,7 +99,7 @@ class OandaApi:
                     req = self.client.get(f'{self.enviroment}/{api_version}/instruments/{symbol}/candles?count=5000&price=BA&granularity=S5&from={start_date}&includeFirst=False')
                     req = json.loads(req.content.decode('utf-8'))['candles']
 
-                    print(start_date[:19], req[-1]['time'][:19])
+                    print(req[0]['time'][:19], req[-1]['time'][:19])
 
                     if not friday and datetime.strptime(req[0]['time'][:19], '%Y-%m-%dT%H:%M:%S').weekday() == 4:
                         friday = True
@@ -116,16 +136,25 @@ class OandaApi:
                     asks = _asks
                     bids = _bids
                 else:
-                    asks = pd.merge(asks, _asks, how='inner', left_index=True, right_index=True)
-                    bids = pd.merge(bids, _bids, how='inner', left_index=True, right_index=True)
+                    asks = pd.merge(asks, _asks, how='outer', left_index=True, right_index=True)
+                    bids = pd.merge(bids, _bids, how='outer', left_index=True, right_index=True)
 
                 print(asks)
 
                 del data, _asks, _bids
 
-            return asks
+            asks = asks.fillna(method='ffill')[1:]
+            bids = bids.fillna(method='ffill')[1:]
 
             
+
+            del asks, bids
+            
+
+
+    # ORDER EXECUTOR
+
+        # TODO
             
             
         
