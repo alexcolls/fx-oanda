@@ -1,3 +1,2 @@
 
-model/bin/primary/data/
-model/bin/secondary/data/
+*.csv
