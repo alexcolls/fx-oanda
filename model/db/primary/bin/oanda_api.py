@@ -1,9 +1,13 @@
 
 # OANDA BROKER REST API
 
+# author: Quantium Rock
+# date: August 2022
+# license: MIT
+
 # config files
 import __auth__
-import __symbols__
+import __universe__
 
 # dependencies
 import requests
@@ -19,10 +23,12 @@ class OandaApi:
 
     # url constants
     ENVIRONMENTS = {
+        # demo account
         "no_trading": {
             "stream": 'https://stream-fxpractice.oanda.com',
             "api": 'https://api-fxpractice.oanda.com'
         },
+        # real account
         "live": {
             "stream": 'hstart_datettps://stream-fxtrade.oanda.com',
             "api": 'https://api-fxtrade.oanda.com'
@@ -43,9 +49,9 @@ class OandaApi:
 
     #__ OandaApi.getRawCandles('EUR_USD', 'H1', '2022-01-01')
 
-    def getRawCandles ( self, symbol, timeframe, start_date, count=5000, api_version='v3' ):
+    def getRawCandles ( self, symbol, timeframe, start_date, count=5000, include_frist=False, api_version='v3' ):
 
-        req = self.client.get(f'{self.enviroment}/{api_version}/instruments/{symbol}/candles?count={count}&price=BA&granularity={timeframe}&from={start_date}&includeFirst=False')
+        req = self.client.get(f'{self.enviroment}/{api_version}/instruments/{symbol}/candles?count={count}&price=BA&granularity={timeframe}&from={start_date}&includeFirst={include_frist}')
 
         return json.loads(req.content.decode('utf-8'))['candles']
 
@@ -54,12 +60,12 @@ class OandaApi:
         """ 
             ,input = year
             ,download candles (bid/ask), min granularity = 5 seconds
-            ,for each symbol in the portfolio, by default __symbols__.SYMBOLS
+            ,for each symbol in the portfolio, by default __universe__.SYMBOLS
             ,from the first monday to the last friday[-2] of the year
             ,group all symbols data by weeks
             ,store each week locally into ../data/
          """
-    def getWeeksOfYear (  self, year, symbols=__symbols__.SYMBOLS, api_version='v3' ):
+    def storeYearlyQuotes (  self, year=2022, symbols=__universe__.SYMBOLS, timeframe='S5', api_version='v3' ):
 
         # get first monday of the year
         first_monday = timedelta( days=( 7 - datetime.strptime(str(year), '%Y').weekday() ))
@@ -80,44 +86,45 @@ class OandaApi:
         # iterate on each monday of the year (weeks)
         for monday in mondays:
 
-            wk += 1
-            # init weekly dataframes
-            asks = pd.DataFrame()
-            bids = pd.DataFrame()
+            wk += 1 # sum 1 week
 
-            # iterate each __symbols__.SYMBOL to get a full week data each
+            # get each datetime of the week by timeframe ( default=5seconds )
+            day_timestamps = pd.date_range(pd.to_datetime(monday), pd.to_datetime(monday)+timedelta(days=5), freq=timeframe[::-1])[:-1]
+
+            # init daily dataframes indices for asks & bids
+            asks = pd.DataFrame(index=day_timestamps)
+            bids = pd.DataFrame(index=day_timestamps)
+
+            # iterate each __universe__.SYMBOL to get a full week data each
             for symbol in symbols:
 
-                # print week of the year
-                print(symbol, 'week ', wk)
+                # print symbol and week of the year
+                print(symbol, 'week', wk)
 
                 # initialize symbol variable
                 data = { 'dt': [], 'ask': [], 'bid': [] }
                 start_date = monday
-                friday = False
                 iterate = True
 
                 # iterate until the end of week
                 while iterate:
 
                     # request 5 second candles from oanda rest-api
-                    req = self.getRawCandles( symbol, 'S5', start_date )
+                    req = self.getRawCandles( symbol, timeframe, start_date )
 
                     # print first date and last date of the request
                     print(req[0]['time'][:19], req[-1]['time'][:19])
 
-                    # check if first date is friday to activate closing week
-                    if not friday and datetime.strptime(req[0]['time'][:19], '%Y-%m-%dT%H:%M:%S').weekday() == 4:
-                        friday = True
-
+                    # get the number of decimals of instrument's price
                     digits = len(req[0]['ask']['c'].split('.')[1])
 
+                    # iterate each candle
                     for x in req:
                         
-                        # if closing week activated check if the current timestamp is not friday and break loop
-                        if friday and datetime.strptime(x['time'][:19], '%Y-%m-%dT%H:%M:%S').weekday() != 4:
+                        # if current candle time changed week
+                        if pd.to_datetime(x['time']) > asks.index[-1]:
                             iterate = False
-                            break
+                            break # close week
 
                         # append to data bid/ask quotes
                         data['dt'].append(x['time'])
@@ -128,48 +135,61 @@ class OandaApi:
                             c = float(x[p]['c'])
                             data[p].append( round((o+h+l+c*2)/5, digits) )
                     
+                    if len(data['dt']) > 0:
                     # only for current year: check if there is no more history
-                    if start_date == data['dt'][-1]:
-                        iterate = False
-                        del req
-                        break
-                    # otherwise update start_date with last loop request
-                    start_date = data['dt'][-1]
+                        if start_date == data['dt'][-1]:
+                            iterate = False
+                            del req
+                            break
+                        # otherwise update start_date with last loop request
+                        start_date = data['dt'][-1]
 
-                # transform data to asks and bids dataframe
+                # ^ finished symbol week
+
+                # transform data to asks dataframe
                 _asks = pd.DataFrame(data['ask'], index=data['dt'], columns=[symbol])
                 _asks.index = pd.to_datetime(_asks.index)
+                
+                # transform data to bids dataframe
                 _bids = pd.DataFrame(data['bid'], index=data['dt'], columns=[symbol])
                 _bids.index = pd.to_datetime(_bids.index)
 
-                # if first week iteration
-                if len(asks) == 0:
-                    asks = _asks
-                    bids = _bids
-                # otherwise append symbol dataframe to weekly portfolio
-                else:
-                    asks = pd.merge(asks, _asks, how='outer', left_index=True, right_index=True)
-                    bids = pd.merge(bids, _bids, how='outer', left_index=True, right_index=True)
+                # symbol dataframe to the daily portfolio
+                asks = pd.merge(asks, _asks, how='outer', left_index=True, right_index=True)
+                bids = pd.merge(bids, _bids, how='outer', left_index=True, right_index=True)
 
                 # realise memory
                 del data, _asks, _bids
 
-            # when all symbols are done, fill nans with forward fill (last non-nan price)
-            asks = asks.fillna(method='ffill')[1:]
-            bids = bids.fillna(method='ffill')[1:]
+            # ^ finished all symbols
+
+            # fill nans with forward-fill (last non-nan price)
+            asks.fillna(method='ffill', inplace=True)
+            bids.fillna(method='ffill', inplace=True)
+
+            # fill nans with backward-fill (for the first seconds of the week)
+            asks.fillna(method='bfill', inplace=True)
+            bids.fillna(method='bfill', inplace=True)
+
+            # create path ../data/<year>/<week>/
+            path = '../data/'+str(year)+'/'+str(wk)+'/'
+            print('...saving', path)
+            Path(path).mkdir(parents=True, exist_ok=True)
+
+            # save daily csv into year week folder
+            asks.to_csv(path+'asks.csv', index=True)
+            bids.to_csv(path+'bids.csv', index=True)
 
             # realise memory
             del asks, bids
-            
+
+        # ^ finished all weeks
 
 
     # ORDER EXECUTOR
 
         # TODO
             
-            
-        
-
-oanda = OandaApi()
 
 
+# end
