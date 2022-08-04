@@ -1,8 +1,9 @@
 
 import pandas as pd
+pd.options.plotting.backend = "plotly"
 
 
-def getPrices ( year, quote='asks'):
+def getRawYear ( year, quote='asks'):
 
     asks = pd.DataFrame()
 
@@ -16,7 +17,10 @@ def getPrices ( year, quote='asks'):
             asks = pd.concat([asks, df], axis=0)
     
     return asks
+
+def plot
     
+def getRandomWeeks ( )
 
 
 
