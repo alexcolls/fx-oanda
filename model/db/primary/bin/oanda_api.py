@@ -68,7 +68,7 @@ class OandaApi:
     def storeYearlyQuotes (  self, year=2022, start_week=1, timeframe='S5', symbols=__universe__.SYMBOLS ):
 
         # get first monday of the year
-        first_monday = timedelta( days=( 7 - datetime.strptime(str(year), '%Y').weekday() ))
+        first_monday = timedelta(days=( 7 - datetime.strptime(str(year), '%Y').weekday()))
         first_monday = datetime.strptime(str(year), '%Y') + first_monday
 
         # get all mondays of the year, except last one
@@ -81,7 +81,7 @@ class OandaApi:
             else:
                 print('Its not a Monday!', i)
 
-        wk = 0 # init weeks counter
+        wk = start_week-1 # init weeks counter
         
         # iterate on each monday of the year (weeks)
         for monday in mondays:

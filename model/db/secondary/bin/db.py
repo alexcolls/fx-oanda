@@ -19,8 +19,6 @@ def getRawYear ( year, quote='asks'):
     return asks
 
 
-
-
 class prepDataset:
 
     def __init__ ( self, timeframe='H1' ):
