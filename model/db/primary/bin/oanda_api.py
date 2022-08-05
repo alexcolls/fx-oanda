@@ -65,14 +65,14 @@ class OandaApi:
             ,group all symbols data by weeks
             ,store each week locally into ../data/
          """
-    def storeYearlyQuotes (  self, year=2022, symbols=__universe__.SYMBOLS, timeframe='S5', api_version='v3' ):
+    def storeYearlyQuotes (  self, year=2022, start_week=1, symbols=__universe__.SYMBOLS, timeframe='S5', api_version='v3' ):
 
         # get first monday of the year
         first_monday = timedelta( days=( 7 - datetime.strptime(str(year), '%Y').weekday() ))
         first_monday = datetime.strptime(str(year), '%Y') + first_monday
 
         # get all mondays of the year, except last one
-        mondays = [ first_monday + timedelta(weeks=i) for i in range(51) ]
+        mondays = [ first_monday + timedelta(weeks=i) for i in range(start_week-1, 51) ]
 
         # check mondays dates and add utc timezone
         for i, monday in enumerate(mondays):
