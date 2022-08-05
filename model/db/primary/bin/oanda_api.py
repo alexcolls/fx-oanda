@@ -65,7 +65,7 @@ class OandaApi:
             ,group all symbols data by weeks
             ,store each week locally into ../data/
          """
-    def storeYearlyQuotes (  self, year=2022, start_week=1, symbols=__universe__.SYMBOLS, timeframe='S5', api_version='v3' ):
+    def storeYearlyQuotes (  self, year=2022, start_week=1, timeframe='S5', symbols=__universe__.SYMBOLS,  ):
 
         # get first monday of the year
         first_monday = timedelta( days=( 7 - datetime.strptime(str(year), '%Y').weekday() ))
