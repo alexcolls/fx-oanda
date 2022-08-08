@@ -16,7 +16,7 @@ if __name__ == "__main__":
 		elif 'update' in argv[1]:
 			print(db1.updateDB())
 		elif 'mids' in argv[1]:
-			print()
+			print(makeMids())
 		else:
 			print('-h for help')
 	else:
