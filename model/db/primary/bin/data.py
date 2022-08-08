@@ -25,7 +25,7 @@ class PrimaryData:
         current_year = datetime.utcnow().year
         years = [ yr for yr in range(start_year, current_year+1) ]
 
-        missing_weeks = { 2008: [], 2009: [1,2,3]}
+        missing_weeks = {}
         current_week = datetime.strptime(str(current_year)+'-01-01', '%Y-%m-%d')
         current_week = ( datetime.utcnow() - current_week ) / timedelta(weeks=1)
         current_week = int(current_week)
