@@ -3,64 +3,85 @@
 # license: MIT
 
 import os
+import pandas as pd
 from pathlib import Path
 from datetime import datetime
 from datetime import timedelta
-import pandas as pd
 
+# import Oanda api & instruments
 from apis.oanda_api import OandaApi
 from __universe__ import SYMBOLS
 
+# Download ...
+#  5 second 
+#  bid & ask prices 
+#  from oanda.com/
+#
+### data/asks_bids/<year>/<week>/asks.csv & bids.csv
+class AsksBids:
 
-class PrimaryData:
-
+    ## class constructor
     def __init__ ( self, timeframe='S5' ):
+        # quotes granuldarity default=5_second_bars
         self.timeframe = timeframe
-        self.db_path = '../data/'
+        self.db_path = '../data/asks_bids'
 
 
+    ## check missing weeks & years in data/asks_bids since <year> default=2005
     def checkDB ( self, start_year=2005 ):
 
+        # check missing years since <start_year>
         missing_years = []
         current_year = datetime.utcnow().year
         years = [ yr for yr in range(start_year, current_year+1) ]
 
+        # init year missing weeks
         missing_weeks = {}
+
+        # get current week of the year
         current_week = datetime.strptime(str(current_year)+'-01-01', '%Y-%m-%d')
         current_week = ( datetime.utcnow() - current_week ) / timedelta(weeks=1)
         current_week = int(current_week)
 
+        # iterate each folder of data/asks_bids/
         years_db = os.listdir(self.db_path)
         for year in years:
             if not str(year) in years_db:
+                # append missing year
                 print('Missing year:', year)
                 missing_years.append(year)
-            else:
+            else: # if year exsits
                 weeks_db = os.listdir(self.db_path + str(year))
+                # if current year
                 wks = current_week if year == current_year else 52
                 missing_weeks[year] = []
                 for week in range(1, wks):
                     if not str(week) in weeks_db:
+                        # append missing week
                         print('Missing week:', week, 'from', year)
                         missing_weeks[year].append(week)
 
         # delete empty keys
         missing_weeks = dict( [ (k,v) for k, v in missing_weeks.items() if len(v) > 0 ] )
 
+        # if no asks_bids weeks missing
         if len(missing_weeks) == 0 and len(missing_years) == 0:
             print('Nice! Primary DB is full!')
-
+        
         return missing_years, missing_weeks
     
 
+    ## update missing years & weeks from checkDB()
     def updateDB ( self ):
-
+        # check for missing years or weeks 
         missing_years, missing_weeks = self.checkDB()
 
+        # if missing years download year
         for year in missing_years:
             print('\nDownloading year...', year)
             self.getQuotesOfYear( year )
         
+        # if missing weeks download weeks
         for year, weeks in missing_weeks.items():
             for week in weeks:
                 print('\nDownloading week...', week, year)
@@ -70,8 +91,8 @@ class PrimaryData:
         
         return True
 
-
-    #__ primaryDB.getQuotesOfYear(2022)
+    
+    ##_ AsksBids.getQuotesOfYear(2022)
         """ 
             1. download candles (bid/ask), min granularity = 5 seconds
             2. for each symbol in the portfolio, by default __universe__.SYMBOLS
@@ -136,7 +157,6 @@ class PrimaryData:
 
                     # iterate each candle
                     for x in req:
-                        
                         # if current candle time changed week
                         if pd.to_datetime(x['time']) > asks.index[-1]:
                             iterate = False
@@ -144,12 +164,14 @@ class PrimaryData:
 
                         # append to data bid/ask quotes
                         data['dt'].append(x['time'])
+                        # iterate bid/ask
                         for p in ['ask', 'bid']:
-                            o = float(x[p]['o'])
-                            h = float(x[p]['h'])
-                            l = float(x[p]['l'])
-                            c = float(x[p]['c'])
-                            data[p].append( round((o+h+l+c*2)/5, digits) )
+                            o = float(x[p]['o']) # open
+                            h = float(x[p]['h']) # high
+                            l = float(x[p]['l']) # low
+                            c = float(x[p]['c']) # close
+                            # round price = ( o + h + l + 2c ) * 0.2
+                            data[p].append( round(( o + h + l + 2*c ) / 5, digits) )
                     
                     if len(data['dt']) > 0:
                     # only for current year: check if there is no more history
@@ -201,32 +223,6 @@ class PrimaryData:
 
         # ^ finished all weeks
 
-    #_
+    ##_AsksBids.getQuotesOfYear()
 
-
-    def _iterateDB ( self, function ):
-        def wrapper():
-            for yr in os.scandir(self.db_path):
-                if yr.is_dir():
-                    for wk in os.scandir(yr.path):
-                        if wk.is_dir():
-                            function(wk.path)
-                            # print(wk.path)
-        return wrapper
-
-
-    @_iterateDB
-    def makeMids ( self, path=None ):
-        asks = pd.read_csv( path + '/asks.csv', index_col=0 )
-        bids = pd.read_csv( path + '/bids.csv', index_col=0 )
-        mids = round( (asks+bids)/2, 5)
-        mids.to_csv( path + '/mids.csv' )
-        print(path, 'done')
-
-    """
-    @_iterateDB
-    def makeIndices( path ):
-        mids = pd.read_csv( path + '/mids.csv', index_col=0 )
-    """
-
-    
+###_PrimaryData.bids_asks
