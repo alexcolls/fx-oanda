@@ -6,10 +6,8 @@ import os
 import pandas as pd
 from pathlib import Path
 
-db_path = '../data/asks_bids'
-
 ## iterate data/asks_bids db to apply <function>
-def _iterateAsksBids ( function ):
+def _iterateAsksBids ( db_path, function ):
     # function wrapper
     def wrapper():
         # iterate years directories
@@ -27,9 +25,9 @@ def _iterateAsksBids ( function ):
 
 
 ## iterate data/asks_bids db to apply <makeMids>
-@_iterateAsksBids
-## create mid=(a+b)/2 prices db
-def makeMids ( path, year, week ):
+@_iterateAsksBids('../data/asks_bids')
+## create mid=[(ask+bid)/2] prices db
+def makeMids ( in_path, out_path, year, week ):
     # loads data/asks_bids
     asks = pd.read_csv( path + '/asks.csv', index_col=0 )
     bids = pd.read_csv( path + '/bids.csv', index_col=0 )
