@@ -2,11 +2,18 @@
 # author: Quantium Rock
 # license: MIT
 
-from oanda_api import OandaApi
-import sys
+from data import primaryDB
+from sys import argv
 
 if __name__ == "__main__":
-   year = int(sys.argv[1])  # input year
-   start_week = int(sys.argv[2]) # input start_week
-   oanda = OandaApi()
-   oanda.storeYearlyQuotes(year, start_week)
+	db = primaryDB()
+	if len(argv) > 1:
+		if 'check' in argv[1]:
+			print(db.checkDB())
+		elif 'update' in argv[1]:
+			print(db.updateDB())
+		
+		else:
+			print('-h for help')
+	else:
+		print('HELP')

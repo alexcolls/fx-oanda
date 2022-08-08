@@ -1,78 +1,94 @@
 
-# OANDA BROKER REST API
-
 # author: Quantium Rock
-# date: August 2022
 # license: MIT
 
-# config files
-import __auth__
-import __universe__
-
-# dependencies
-import requests
-import json
+import os
 from pathlib import Path
 from datetime import datetime
 from datetime import timedelta
 import pandas as pd
 
-# API CLIENT
+from apis.oanda_api import OandaApi
+from __universe__ import SYMBOLS
 
-class OandaApi:
 
-    # url constants
-    ENVIRONMENTS = {
-        # demo account
-        "no_trading": {
-            "stream": 'https://stream-fxpractice.oanda.com',
-            "api": 'https://api-fxpractice.oanda.com'
-        },
-        # real account
-        "live": {
-            "stream": 'hstart_datettps://stream-fxtrade.oanda.com',
-            "api": 'https://api-fxtrade.oanda.com'
-        }
-    }
+class PrimaryData:
 
-    def __init__  ( self, LIVE_TRADING=False,  TOKEN=__auth__.TOKEN ):
+    def __init__ ( self, timeframe='S5' ):
+        self.timeframe = timeframe
+        self.db_path = '../data/'
+
+
+    def checkDB ( self, start_year=2005 ):
+
+        missing_years = []
+        current_year = datetime.utcnow().year
+        years = [ yr for yr in range(start_year, current_year+1) ]
+
+        missing_weeks = { 2008: [], 2009: [1,2,3]}
+        current_week = datetime.strptime(str(current_year)+'-01-01', '%Y-%m-%d')
+        current_week = ( datetime.utcnow() - current_week ) / timedelta(weeks=1)
+        current_week = int(current_week)
+
+        years_db = os.listdir(self.db_path)
+        for year in years:
+            if not str(year) in years_db:
+                print('Missing year:', year)
+                missing_years.append(year)
+            else:
+                weeks_db = os.listdir(self.db_path + str(year))
+                wks = current_week if year == current_year else 52
+                missing_weeks[year] = []
+                for week in range(1, wks):
+                    if not str(week) in weeks_db:
+                        print('Missing week:', week, 'from', year)
+                        missing_weeks[year].append(week)
+
+        # delete empty keys
+        missing_weeks = dict( [ (k,v) for k, v in missing_weeks.items() if len(v) > 0 ] )
+
+        if len(missing_weeks) == 0 and len(missing_years) == 0:
+            print('Nice! Primary DB is full!')
+
+        return missing_years, missing_weeks
+    
+
+    def updateDB ( self ):
+
+        missing_years, missing_weeks = self.checkDB()
+
+        for year in missing_years:
+            print('\nDownloading year...', year)
+            self.getQuotesOfYear( year )
         
-        # set trading enviroment
-        self.enviroment = self.ENVIRONMENTS['no_trading']['api']
-        if LIVE_TRADING:
-            self.enviroment = self.ENVIRONMENTS['live']
+        for year, weeks in missing_weeks.items():
+            for week in weeks:
+                print('\nDownloading week...', week, year)
+                self.getQuotesOfYear( year=year, start_week=week, end_week=week )
 
-        # set request session  and add authentification metadata
-        self.client = requests.Session()
-        self.client.headers['Authorization'] = 'Bearer '+ TOKEN
-
-
-    #__ OandaApi.getRawCandles('EUR_USD', 'H1', '2022-01-01')
-
-    def getRawCandles ( self, symbol, timeframe, start_date, count=5000, include_frist=False, api_version='v3' ):
-
-        req = self.client.get(f'{self.enviroment}/{api_version}/instruments/{symbol}/candles?count={count}&price=BA&granularity={timeframe}&from={start_date}&includeFirst={include_frist}')
-
-        return json.loads(req.content.decode('utf-8'))['candles']
+        print('Primary DB updated!')
+        
+        return True
 
 
-    #__ OandaApi.getWeeksOfYear(2022)
+    #__ primaryDB.getQuotesOfYear(2022)
         """ 
-            ,input = year
-            ,download candles (bid/ask), min granularity = 5 seconds
-            ,for each symbol in the portfolio, by default __universe__.SYMBOLS
-            ,from the first monday to the last friday[-2] of the year
-            ,group all symbols data by weeks
-            ,store each week locally into ../data/
+            1. download candles (bid/ask), min granularity = 5 seconds
+            2. for each symbol in the portfolio, by default __universe__.SYMBOLS
+            3. from the first monday to the last friday[-2] of the year
+            4. group all symbols data by weeks
+            5. store each week locally into ../data/
          """
-    def storeYearlyQuotes (  self, year=2022, start_week=1, timeframe='S5', symbols=__universe__.SYMBOLS ):
+    def getQuotesOfYear (  self, year=2022, start_week=1, end_week=51, symbols=SYMBOLS ):
+
+        oanda_api = OandaApi()
 
         # get first monday of the year
         first_monday = timedelta(days=( 7 - datetime.strptime(str(year), '%Y').weekday()))
         first_monday = datetime.strptime(str(year), '%Y') + first_monday
 
         # get all mondays of the year, except last one
-        mondays = [ first_monday + timedelta(weeks=i) for i in range(start_week-1, 51) ]
+        mondays = [ first_monday + timedelta(weeks=i) for i in range(start_week-1, end_week) ]
 
         # check mondays dates and add utc timezone
         for i, monday in enumerate(mondays):
@@ -89,7 +105,7 @@ class OandaApi:
             wk += 1 # sum 1 week
 
             # get each datetime of the week by timeframe ( default=5seconds )
-            day_timestamps = pd.date_range(pd.to_datetime(monday), pd.to_datetime(monday)+timedelta(days=5), freq=timeframe[::-1])[:-1]
+            day_timestamps = pd.date_range(pd.to_datetime(monday), pd.to_datetime(monday) + timedelta(days=5), freq=self.timeframe[::-1])[:-1]
 
             # init daily dataframes indices for asks & bids
             asks = pd.DataFrame(index=day_timestamps)
@@ -109,8 +125,8 @@ class OandaApi:
                 # iterate until the end of week
                 while iterate:
 
-                    # request 5 second candles from oanda rest-api
-                    req = self.getRawCandles( symbol, timeframe, start_date )
+                    # request 5000 5-second-bars from oanda rest-api
+                    req = oanda_api.getRawCandles( symbol, self.timeframe, start_date )
 
                     # print first date and last date of the request
                     print(req[0]['time'][:19], req[-1]['time'][:19])
@@ -158,7 +174,7 @@ class OandaApi:
                 asks = pd.merge(asks, _asks, how='outer', left_index=True, right_index=True)
                 bids = pd.merge(bids, _bids, how='outer', left_index=True, right_index=True)
 
-                # realise memory
+                # realese memory
                 del data, _asks, _bids
 
             # ^ finished all symbols
@@ -180,16 +196,37 @@ class OandaApi:
             asks.to_csv(path+'asks.csv', index=True)
             bids.to_csv(path+'bids.csv', index=True)
 
-            # realise memory
+            # realese memory
             del asks, bids
 
         # ^ finished all weeks
 
-
-    # ORDER EXECUTOR
-
-        # TODO
-            
+    #_
 
 
-# end
+    def _iterateDB ( self, function ):
+        def wrapper():
+            for yr in os.scandir(self.db_path):
+                if yr.is_dir():
+                    for wk in os.scandir(yr.path):
+                        if wk.is_dir():
+                            function(wk.path)
+                            # print(wk.path)
+        return wrapper
+
+
+    @_iterateDB
+    def makeMids ( self, path=None ):
+        asks = pd.read_csv( path + '/asks.csv', index_col=0 )
+        bids = pd.read_csv( path + '/bids.csv', index_col=0 )
+        mids = round( (asks+bids)/2, 5)
+        mids.to_csv( path + '/mids.csv' )
+        print(path, 'done')
+
+    """
+    @_iterateDB
+    def makeIndices( path ):
+        mids = pd.read_csv( path + '/mids.csv', index_col=0 )
+    """
+
+    
