@@ -17,14 +17,35 @@ from __universe__ import SYMBOLS
 #  bid & ask prices 
 #  from oanda.com/
 #
-### data/asks_bids/<year>/<week>/asks.csv & bids.csv
+### AsksBids -> data/asks_bids/<year>/<week>/asks.csv, bids.csv
 class AsksBids:
 
     ## class constructor
     def __init__ ( self, timeframe='S5' ):
-        # quotes granuldarity default=5_second_bars
+        # quotes granularity default=5_second_bars
         self.timeframe = timeframe
-        self.db_path = '../data/asks_bids'
+        self.db_path = '../data/asks_bids/'
+
+
+    ## update missing years & weeks from checkDB()
+    def updateAsksBids ( self ):
+        # check for missing years or weeks 
+        missing_years, missing_weeks, _ = self.checkDB()
+
+        # if missing years download year
+        for year in missing_years:
+            print('\nDownloading year...', year)
+            self.getQuotesOfYear( year )
+        
+        # if missing weeks download weeks
+        for year, weeks in missing_weeks.items():
+            for week in weeks:
+                print('\nDownloading week...', week, year)
+                self.getQuotesOfYear( year=year, start_week=week, end_week=week )
+
+        print('Primary DB updated!')
+
+        return True
 
 
     ## check missing weeks & years in data/asks_bids since <year> default=2005
@@ -68,28 +89,7 @@ class AsksBids:
         if len(missing_weeks) == 0 and len(missing_years) == 0:
             print('Nice! Primary DB is full!')
         
-        return missing_years, missing_weeks
-    
-
-    ## update missing years & weeks from checkDB()
-    def updateDB ( self ):
-        # check for missing years or weeks 
-        missing_years, missing_weeks = self.checkDB()
-
-        # if missing years download year
-        for year in missing_years:
-            print('\nDownloading year...', year)
-            self.getQuotesOfYear( year )
-        
-        # if missing weeks download weeks
-        for year, weeks in missing_weeks.items():
-            for week in weeks:
-                print('\nDownloading week...', week, year)
-                self.getQuotesOfYear( year=year, start_week=week, end_week=week )
-
-        print('Primary DB updated!')
-        
-        return True
+        return missing_years, missing_weeks, current_week
 
     
     ##_ AsksBids.getQuotesOfYear(2022)
@@ -225,4 +225,124 @@ class AsksBids:
 
     ##_AsksBids.getQuotesOfYear()
 
-###_PrimaryData.bids_asks
+###_AsksBids()
+
+
+###_Mids -> data/asks_bids/<year>/<week>/asks.csv, bids.csv
+    """
+        Create mid prices from bid/ask
+    """
+class Mids ( AsksBids ):
+
+    ## class constructor
+    def __init__ ( self ):
+        # quotes granularity default=5_second_bars
+        super().__init__( self )
+        self.updateAsksBids()
+        self.db_path = '../data/mids/'
+        self.missing_years, self.missing_weeks, self.current_week = self.checkDB()
+
+    ## 
+    def updateMids ( self ):
+
+        print('\nUpdating mids db...\n')
+
+        out_path = self.db_path
+        in_path = self.db_path.replace('mids', 'asks_bids')
+
+        if (self.missing_years):
+            for year in self.missing_years:
+                for week in range(1, 51):
+                    self.makeMids( year, week, in_path, out_path)
+
+        if (self.missing_weeks):
+            for year, weeks in self.missing_weeks.items():
+                for week in weeks:
+                    self.makeMids( year, week, in_path, out_path)
+
+        print('\nMids db upadated.')
+
+        return True
+        
+    ## 
+    def makeMids ( self, year, week, in_path, out_path ):
+        
+        in_path += str(year) +'/'+ str(week)
+        # loads data/asks_bids
+        asks = pd.read_csv( in_path + '/asks.csv', index_col=0 )
+        bids = pd.read_csv( in_path + '/bids.csv', index_col=0 )
+        # calculate mid prices
+        mids = round((asks+bids)/2, 5)
+        # create path ../data/<year>/<week>/
+        path_mids = out_path + str(year) +'/'+ str(week)
+        print('saving', path_mids)
+        Path(path_mids).mkdir(parents=True, exist_ok=True)
+        # create mids.csv file
+        mids.to_csv( path_mids + '/mids.csv' )
+        # log file confirmation
+        print('.done')
+
+        # realese memory
+        del asks, bids
+
+        return mids
+
+
+
+class Spreads ( AsksBids ):
+
+    ## class constructor
+    def __init__ ( self ):
+        # quotes granularity default=5_second_bars
+        super().__init__( self )
+        self.updateAsksBids()
+        self.db_path = '../data/spreads/'
+        self.missing_years, self.missing_weeks, self.current_week = self.checkDB()
+
+    ## 
+    def updateSpreads ( self ):
+
+        print('\nUpdating spreads db...\n')
+
+        out_path = self.db_path
+        in_path = self.db_path.replace('spreads', 'asks_bids')
+
+        if (self.missing_years):
+            for year in self.missing_years:
+                for week in range(1, 51):
+                    self.makeSpreads( year, week, in_path, out_path)
+
+        if (self.missing_weeks):
+            for year, weeks in self.missing_weeks.items():
+                for week in weeks:
+                    self.makeSpreads( year, week, in_path, out_path)
+
+        print('\nSpreads db upadated.')
+
+        return True
+    
+    def makeSpreads ( self, year, week, in_path, out_path ):
+        
+        in_path += str(year) +'/'+ str(week)
+        # loads data/asks_bids
+        asks = pd.read_csv( in_path + '/asks.csv', index_col=0 )
+        bids = pd.read_csv( in_path + '/bids.csv', index_col=0 )
+        # calculate mid prices
+        mids = round(((asks/bids)-1)*10000, 2)
+        # create path ../data/<year>/<week>/
+        path_mids = out_path + str(year) +'/'+ str(week)
+        print('saving', path_mids)
+        Path(path_mids).mkdir(parents=True, exist_ok=True)
+        # create mids.csv file
+        mids.to_csv( path_mids + '/spreads.csv' )
+        # log file confirmation
+        print('.done')
+
+        # realese memory
+        del asks, bids
+
+        return mids
+    
+
+spr = Spreads()
+spr.updateSpreads()
