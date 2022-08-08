@@ -8,8 +8,7 @@ from pathlib import Path
 
 db_path = '../data/asks_bids'
 
-
-# iterate data/asks_bids db to apply <function>
+## iterate data/asks_bids db to apply <function>
 def _iterateAsksBids ( function ):
     # function wrapper
     def wrapper():
@@ -27,9 +26,9 @@ def _iterateAsksBids ( function ):
     return  wrapper
 
 
-# iterating data/asks_bids db to apply <makeMids>
+## iterate data/asks_bids db to apply <makeMids>
 @_iterateAsksBids
-# create mid=(a+b)/2 prices db
+## create mid=(a+b)/2 prices db
 def makeMids ( path, year, week ):
     # loads data/asks_bids
     asks = pd.read_csv( path + '/asks.csv', index_col=0 )
@@ -43,12 +42,13 @@ def makeMids ( path, year, week ):
     # create mids.csv file
     mids.to_csv( path_mids + '/mids.csv' )
     # log file confirmation
-    print(path, 'done')
+    print('done')
 
     # realese memory
     del asks, bids, mids
 
-# delete all data/<year>/<week>/mids.csv -dontaskwhy
+
+## delete all data/<year>/<week>/mids.csv -dontaskwhy
 def deleteMids( path ):
     for yr in os.scandir('../data/mids'):
         if yr.is_dir():
