@@ -61,6 +61,25 @@ class prepDataset:
 
 
     
+def getWeek( week=2, year=2018, symbol='EUR_CHF' ):
+    path = '../../primary/data/'+str(year)+'/'+str(week)+'/'
+    df = pd.read_csv(path+'mids.csv', index_col=0)
+    ccys = pd.read_csv(path+'ccys.csv', index_col=0)
+    sym = pd.DataFrame(df['EUR_GBP'])
+    sym['syn'] = ( ccys['EUR'] / ccys['CHF'] )
+
+    sym = pd.DataFrame(ccys['GBP'])
+    fig = idxs.plot()
+    fig.show()
+
+    idxs = ( df / df.iloc[0] -1 )*100
+
+    idxs['mean'] = idxs.T.mean()
+
+    fig.show()
+    fig = test.plot()
+
+
 
 
 

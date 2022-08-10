@@ -12,49 +12,67 @@ from datetime import timedelta
 from apis.oanda_api import OandaApi
 from __universe__ import SYMBOLS
 
-# Download ...
-#  5 second 
-#  bid & ask prices 
-#  from oanda.com/
-#
-### AsksBids -> data/asks_bids/<year>/<week>/asks.csv, bids.csv
-class AsksBids:
+
+### PrimaryData -> ../data/<year>/<week>/:
+#   asks.csv, bids.csv, mids.csv, spreads.csv, ccys.csv
+class PrimaryData:
 
     ## class constructor
-    def __init__ ( self, timeframe='S5' ):
+    def __init__ ( self, timeframe='S5', symbols=SYMBOLS, start_year=2005 ):
+        
         # quotes granularity default=5_second_bars
         self.timeframe = timeframe
-        self.db_path = '../data/asks_bids/'
+        self.start_year = int(start_year)
+        self.db_path = '../data/'
+        self.missing_years, self.missing_weeks, self.current_week = self.checkDB()
+        self.symbols = symbols
+        self.ccys = self.getCcys()
+        self.files = ['asks.csv', 'bids.csv', 'mids.csv', 'spreads.csv', 'ccys.csv']
+    
 
+    ## update data of primary db missing years & weeks
+    def updateDB ( self ):
 
-    ## update missing years & weeks from checkDB()
-    def updateAsksBids ( self ):
-        # check for missing years or weeks 
-        missing_years, missing_weeks, _ = self.checkDB()
-
+        start_time = datetime.utcnow()
         # if missing years download year
-        for year in missing_years:
-            print('\nDownloading year...', year)
-            self.getQuotesOfYear( year )
-        
+        if ( self.missing_years ):
+            for year in self.missing_years:
+                path = '../data/'+str(year)+'/'
+                print('\n...creating', year)
+                Path(path).mkdir(parents=True, exist_ok=True)
+                for week in range(1, 52):
+                    print('\nDownloading asks&bids of week...', week, year)
+                    self.getAsksBids( year=year, start_week=week, end_week=week )
+                    print('\nCreating mids.csv & spreads.csv of week...', week, year)
+                    self.makeMidsSpreads( year, week )
+                    print('\nCreating currency indexes (ccys.csv) of week...', week, year)
+                    self.makeCcys( year, week )
+                    
         # if missing weeks download weeks
-        for year, weeks in missing_weeks.items():
-            for week in weeks:
-                print('\nDownloading week...', week, year)
-                self.getQuotesOfYear( year=year, start_week=week, end_week=week )
+        if ( self.missing_weeks ):
+            for year, weeks in self.missing_weeks.items():
+                for week in weeks:
+                    print('\nUpdating week...', week, year)
+                    self.getAsksBids( year=year, start_week=week, end_week=week )
+                    print('\nCreating mids.csv & spreads.csv of week...', week, year)
+                    self.makeMidsSpreads( year, week )
+                    print('\nCreating currency indexes (ccys.csv) of week...', week, year)
+                    self.makeCcys( year, week )
 
         print('Primary DB updated!')
+        end_time = datetime.utcnow()
+        print('It took:', start_time - end_time)
 
         return True
-
+  
 
     ## check missing weeks & years in data/asks_bids since <year> default=2005
-    def checkDB ( self, start_year=2005 ):
+    def checkDB ( self ):
 
         # check missing years since <start_year>
         missing_years = []
         current_year = datetime.utcnow().year
-        years = [ yr for yr in range(start_year, current_year+1) ]
+        years = [ yr for yr in range(self.start_year, current_year+1) ]
 
         # init year missing weeks
         missing_weeks = {}
@@ -64,7 +82,7 @@ class AsksBids:
         current_week = ( datetime.utcnow() - current_week ) / timedelta(weeks=1)
         current_week = int(current_week)
 
-        # iterate each folder of data/asks_bids/
+        # iterate each folder of data/<year>/<week>/
         years_db = os.listdir(self.db_path)
         for year in years:
             if not str(year) in years_db:
@@ -80,19 +98,68 @@ class AsksBids:
                     if not str(week) in weeks_db:
                         # append missing week
                         print('Missing week:', week, 'from', year)
-                        missing_weeks[year].append(week)
+                        missing_weeks[year].append(week)                              
+
 
         # delete empty keys
         missing_weeks = dict( [ (k,v) for k, v in missing_weeks.items() if len(v) > 0 ] )
 
         # if no asks_bids weeks missing
-        if len(missing_weeks) == 0 and len(missing_years) == 0:
-            print('Nice! Primary DB is full!')
+        if not missing_weeks and  not missing_years:
+            print('\nPrimary DB is fully updated since', self.start_year, '\n')
         
         return missing_years, missing_weeks, current_week
 
+
+    ## create mids.csv & spreads.csv
+    def makeMidsSpreads ( self, year, week ):
+        
+        path = self.db_path +'/'+ str(year) +'/'+ str(week)
+        # loads data/asks_bids
+        asks = pd.read_csv( path + '/asks.csv', index_col=0 )
+        bids = pd.read_csv( path + '/bids.csv', index_col=0 )
+        # calculate mid prices
+        mids = round((asks+bids)/2, 5)
+        # calculate spreads prices
+        spreads = round(((asks/bids)-1)*10000, 2)
+        # create mids.csv file
+        mids.to_csv( path + '/mids.csv' )
+        # create spreads.csv file
+        spreads.to_csv( path + '/spreads.csv' )
+        # log file confirmation
+        print('.done')
+
+        # realese memory
+        del asks, bids, mids, spreads
+
+
+    ## get currencies (ccys) from symbols (pairs)
+    def getCcys ( self ):
+        ccys = []
+        for sym in self.symbols:
+            ccy = sym.split('_')
+            if ccy[0] not in ccys:
+                ccys.append(ccy[0])
+            if ccy[1] not in ccys:
+                ccys.append(ccy[1])
+        ccys.sort()
+        return ccys
+
+
+    ## create currency basket prices -> ccys.csv
+    def makeCcys( self, year, week ):
+        path = '../data/' + str(year) +'/'+ str(week)
+        mids = pd.read_csv( path+'/mids.csv', index_col=0 )
+        idxs = pd.DataFrame(index=mids.index, columns=self.ccys)
+        for ccy in self.ccys:
+            base = mids[mids.filter(regex=ccy+'_').columns].sum(axis=1)
+            term = mids[mids.filter(regex='_'+ccy).columns].apply( lambda x: 1/x ).sum(axis=1)
+            idxs[ccy] = round(( base + term + 1 ) / (len(self.ccys)+1), 5)
+        idxs.to_csv( path+'/ccys.csv', index=True )
+        del mids, idxs
+
     
-    ##_ AsksBids.getQuotesOfYear(2022)
+    ##_ PrimaryData.getAsksBids(2022)
         """ 
             1. download candles (bid/ask), min granularity = 5 seconds
             2. for each symbol in the portfolio, by default __universe__.SYMBOLS
@@ -100,7 +167,7 @@ class AsksBids:
             4. group all symbols data by weeks
             5. store each week locally into ../data/
          """
-    def getQuotesOfYear (  self, year=2022, start_week=1, end_week=51, symbols=SYMBOLS ):
+    def getAsksBids ( self, year=2022, start_week=1, end_week=51 ):
 
         oanda_api = OandaApi()
 
@@ -133,7 +200,7 @@ class AsksBids:
             bids = pd.DataFrame(index=day_timestamps)
 
             # iterate each __universe__.SYMBOL to get a full week data each
-            for symbol in symbols:
+            for symbol in self.symbols:
 
                 # print symbol and week of the year
                 print(symbol, 'week', wk)
@@ -211,7 +278,7 @@ class AsksBids:
 
             # create path ../data/<year>/<week>/
             path = '../data/'+str(year)+'/'+str(wk)+'/'
-            print('...saving', path)
+            print('...saving', symbol, 'asks.csv & bids.csv', path)
             Path(path).mkdir(parents=True, exist_ok=True)
 
             # save daily csv into year week folder
@@ -223,126 +290,16 @@ class AsksBids:
 
         # ^ finished all weeks
 
-    ##_AsksBids.getQuotesOfYear()
-
-###_AsksBids()
-
-
-###_Mids -> data/asks_bids/<year>/<week>/asks.csv, bids.csv
-    """
-        Create mid prices from bid/ask
-    """
-class Mids ( AsksBids ):
-
-    ## class constructor
-    def __init__ ( self ):
-        # quotes granularity default=5_second_bars
-        super().__init__( self )
-        self.updateAsksBids()
-        self.db_path = '../data/mids/'
-        self.missing_years, self.missing_weeks, self.current_week = self.checkDB()
-
-    ## 
-    def updateMids ( self ):
-
-        print('\nUpdating mids db...\n')
-
-        out_path = self.db_path
-        in_path = self.db_path.replace('mids', 'asks_bids')
-
-        if (self.missing_years):
-            for year in self.missing_years:
-                for week in range(1, 51):
-                    self.makeMids( year, week, in_path, out_path)
-
-        if (self.missing_weeks):
-            for year, weeks in self.missing_weeks.items():
-                for week in weeks:
-                    self.makeMids( year, week, in_path, out_path)
-
-        print('\nMids db upadated.')
-
-        return True
-        
-    ## 
-    def makeMids ( self, year, week, in_path, out_path ):
-        
-        in_path += str(year) +'/'+ str(week)
-        # loads data/asks_bids
-        asks = pd.read_csv( in_path + '/asks.csv', index_col=0 )
-        bids = pd.read_csv( in_path + '/bids.csv', index_col=0 )
-        # calculate mid prices
-        mids = round((asks+bids)/2, 5)
-        # create path ../data/<year>/<week>/
-        path_mids = out_path + str(year) +'/'+ str(week)
-        print('saving', path_mids)
-        Path(path_mids).mkdir(parents=True, exist_ok=True)
-        # create mids.csv file
-        mids.to_csv( path_mids + '/mids.csv' )
-        # log file confirmation
-        print('.done')
-
-        # realese memory
-        del asks, bids
-
-        return mids
+    ##_AsksBids.getAsksBids()
 
 
 
-class Spreads ( AsksBids ):
-
-    ## class constructor
-    def __init__ ( self ):
-        # quotes granularity default=5_second_bars
-        super().__init__( self )
-        self.updateAsksBids()
-        self.db_path = '../data/spreads/'
-        self.missing_years, self.missing_weeks, self.current_week = self.checkDB()
-
-    ## 
-    def updateSpreads ( self ):
-
-        print('\nUpdating spreads db...\n')
-
-        out_path = self.db_path
-        in_path = self.db_path.replace('spreads', 'asks_bids')
-
-        if (self.missing_years):
-            for year in self.missing_years:
-                for week in range(1, 51):
-                    self.makeSpreads( year, week, in_path, out_path)
-
-        if (self.missing_weeks):
-            for year, weeks in self.missing_weeks.items():
-                for week in weeks:
-                    self.makeSpreads( year, week, in_path, out_path)
-
-        print('\nSpreads db upadated.')
-
-        return True
     
-    def makeSpreads ( self, year, week, in_path, out_path ):
-        
-        in_path += str(year) +'/'+ str(week)
-        # loads data/asks_bids
-        asks = pd.read_csv( in_path + '/asks.csv', index_col=0 )
-        bids = pd.read_csv( in_path + '/bids.csv', index_col=0 )
-        # calculate mid prices
-        mids = round(((asks/bids)-1)*10000, 2)
-        # create path ../data/<year>/<week>/
-        path_mids = out_path + str(year) +'/'+ str(week)
-        print('saving', path_mids)
-        Path(path_mids).mkdir(parents=True, exist_ok=True)
-        # create mids.csv file
-        mids.to_csv( path_mids + '/spreads.csv' )
-        # log file confirmation
-        print('.done')
-
-        # realese memory
-        del asks, bids
-
-        return mids
     
 
-spr = Spreads()
-spr.updateSpreads()
+
+
+
+
+
+ 

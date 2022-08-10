@@ -3,19 +3,18 @@
 # license: MIT
 
 from sys import argv
-from asks_bids import AsksBids
-from mids import makeMids
+from data import PrimaryData
 
 
 if __name__ == "__main__":
-	db1 = AsksBids()
+
 	if len(argv) > 1:
 		if 'check' in argv[1]:
-			print(db1.checkDB())
+			PrimaryData().checkDB()
 		elif 'update' in argv[1]:
-			print(db1.updateDB())
+			PrimaryData().updateDB()
 		elif 'mids' in argv[1]:
-			print(makeMids())
+			pass
 		else:
 			print('-h for help')
 	else:
