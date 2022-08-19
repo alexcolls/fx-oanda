@@ -60,6 +60,7 @@ class prepDataset:
         mids.groupby(['month', 'day', 'hour']).last()
 
 
+import numpy as np
     
 def getWeek( week=2, year=2018, symbol='EUR_CHF' ):
     path = '../../primary/data/'+str(year)+'/'+str(week)+'/'
@@ -68,16 +69,17 @@ def getWeek( week=2, year=2018, symbol='EUR_CHF' ):
     sym = pd.DataFrame(df['EUR_GBP'])
     sym['syn'] = ( ccys['EUR'] / ccys['CHF'] )
 
-    sym = pd.DataFrame(ccys['GBP'])
+    sym = pd.DataFrame(ccys)
     fig = idxs.plot()
     fig.show()
-
-    idxs = ( df / df.iloc[0] -1 )*100
+    
+    idxs = ( np.log(ccys) - np.log(ccys.iloc[0]) )*100
+    idxs['jpy'] = ( log(ccys['JPY'] / ccys['JPY'].iloc[0] -1 )*100
 
     idxs['mean'] = idxs.T.mean()
 
     fig.show()
-    fig = test.plot()
+    
 
 
 

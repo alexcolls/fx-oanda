@@ -18,7 +18,7 @@ from __universe__ import SYMBOLS
 class PrimaryData:
 
     ## class constructor
-    def __init__ ( self, timeframe='M1', symbols=SYMBOLS, start_year=2005 ):
+    def __init__ ( self, timeframe='H1', symbols=SYMBOLS, start_year=2005 ):
         
         # quotes granularity default=5_second_bars
         self.timeframe = timeframe
@@ -113,7 +113,7 @@ class PrimaryData:
 
     ## create mids.csv & spreads.csv
     def makeMidsSpreads ( self, year, week ):
-        # database path
+        
         path = self.db_path +'/'+ str(year) +'/'+ str(week)
         # loads data/asks_bids
         asks = pd.read_csv( path + '/asks.csv', index_col=0 )
@@ -192,13 +192,8 @@ class PrimaryData:
 
             wk += 1 # sum 1 week
 
-            # add range frequency to each week
-            freq = '1min'
-            if self.timeframe.startswith('S'):
-                freq = self.timeframe[::-1]
-
             # get each datetime of the week by timeframe ( default=5seconds )
-            day_timestamps = pd.date_range(pd.to_datetime(monday), pd.to_datetime(monday) + timedelta(days=5), freq=freq)[:-1]
+            day_timestamps = pd.date_range(pd.to_datetime(monday), pd.to_datetime(monday) + timedelta(days=5), freq=self.timeframe[::-1])[:-1]
 
             # init daily dataframes indices for asks & bids
             asks = pd.DataFrame(index=day_timestamps)
@@ -219,7 +214,7 @@ class PrimaryData:
                 while iterate:
 
                     # request 5000 5-second-bars from oanda rest-api
-                    req = oanda_api.getRawCandles( symbol, self.timeframe, start_date )
+                    req = oanda_api.getRawCandles( symbol, self.timeframe, start_date, count=200 )
 
                     # print first date and last date of the request
                     print(req[0]['time'][:19], req[-1]['time'][:19])
