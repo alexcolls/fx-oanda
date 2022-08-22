@@ -48,7 +48,7 @@ class PrimaryData:
         if ( self.missing_weeks ):
             for year, weeks in self.missing_weeks.items():
                 for week in weeks:
-                    print('\nDownloading week...', week, year, '\n')
+                    print('\nDownloading week', week, 'from', year, '\n')
                     self.getData( year=year, start_week=week, end_week=week )
         
         print('Primary DB updated!')
