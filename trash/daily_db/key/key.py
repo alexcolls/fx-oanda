@@ -1,2 +1,0 @@
-# YOUR ONDA TOKEN
-token = ""
