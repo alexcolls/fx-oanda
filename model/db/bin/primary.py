@@ -19,7 +19,7 @@ with open("meta/variables.json") as x:
 
 
 ### PrimaryData -> ../data/<year>/<week>/:
-#   asks.csv, bids.csv, mids.csv, spreads.csv, ccys.csv
+#   asks.csv, bids.csv, mids.csv, spreads.csv, volumes.csv
 class PrimaryData:
 
     ## class constructor
@@ -104,13 +104,13 @@ class PrimaryData:
 
 
     
-    ##_ PrimaryData.getAsksBids(2022)
+    ##_ PrimaryData.getData(2022)
         """ 
             1. download candles (bid/ask), min granularity = 5 seconds
             2. for each symbol in the portfolio, by default __universe__.SYMBOLS
             3. from the first monday to the last friday[-2] of the year
             4. group all symbols data by weeks
-            5. store each week locally into ../data/
+            5. store each week locally into ../data/primary/
          """
     def getData ( self, year=2022, start_week=1, end_week=51 ):
 

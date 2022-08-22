@@ -3,19 +3,36 @@ import numpy as np
 import pandas as pd
 
 
+class SecondaryData:
+
+    def __init__ ( self ):
+        pass
+
+    def getCcys ( self ):
+            ccys = []
+            for sym in self.symbols:
+                ccy = sym.split('_')
+                if ccy[0] not in ccys:
+                    ccys.append(ccy[0])
+                if ccy[1] not in ccys:
+                    ccys.append(ccy[1])
+            ccys.sort()
+            return ccys
+
+    def makeData( year=2020, week=1 ):
+
+        in_path = '../../primary/data/'+str(year)+'/'+str(week)+'/'
+
+        # load mid prices
+        mids = pd.read_csv(in_path+'mids.csv', index_col=0)
+
+        # create portfolio returns (standarize protfolio prices %)
+        mids_ = ( np.log(mids) - np.log(mids.iloc[0]) )*100
+
+        out_path = '../../secondary/data/'+str(year)+'/'+str(week)+'/'
 
 
-def plotWeek( year=2020, week=1 ):
 
-    path = '../../primary/data/'+str(year)+'/'+str(week)+'/'
-
-    # load mid prices
-    mids = pd.read_csv(path+'mids.csv', index_col=0)
-    asks = pd.read_csv(path+'asks.csv', index_col=0)
-    bids = pd.read_csv(path+'bids.csv', index_col=0)
-
-    # create portfolio returns
-    mids_ = ( np.log(mids) - np.log(mids.iloc[0]) )*100
 
     # plot portfolio returns
     mids_.plot(title=f'Weekly market returns (%) {year}, week {week}').show()
