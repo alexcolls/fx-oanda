@@ -1,21 +1,7 @@
 
-# author: Quantium Rock
-# license: MIT
+# model main configuratrion
 
-from config.keys.oanda_token import TOKEN
-
-AUTH = TOKEN
-
-if len(AUTH) > 0:
-    print( '\n', AUTH, '\n' )
-    print( '> Key loaded succesfully.', '\n' )
-else:
-    print( '\nERROR!\n> Insert Oanda credentials TOKEN inside ./config/keys/oanda_token.py')
-    print( '> Get yours: https://developer.oanda.com/rest-live-v20/authentication/\n')
-
-# create symbols list
-
-print('\nPortfolio assets:\n')
+# a) select trading universe:
 
 SYMBOLS = [ 'AUD_CAD', 'AUD_CHF', 'AUD_JPY', 'AUD_NZD', 'AUD_USD', 
             'CAD_CHF', 'CAD_JPY', 'CHF_JPY', 'EUR_AUD', 'EUR_CAD', 
@@ -28,9 +14,7 @@ SYMBOLS = [ 'AUD_CAD', 'AUD_CHF', 'AUD_JPY', 'AUD_NZD', 'AUD_USD',
             'XAU_GBP', 'XAU_JPY', 'XAU_NZD', 'XAU_USD', 'XAU_XAG', 
           ]
 
-i = 0
-for symbol in SYMBOLS:
-    print(symbol)
-    i += 1
 
-print('\n>', i, 'assets loaded. Good luck!', '\n')
+# b) model granularity (S5, M1, M15, H1, H8, D)
+
+TIMEFRAME = 'M1'

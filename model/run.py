@@ -2,45 +2,80 @@
 
 import os
 import json
+from datetime import datetime
+
+from db.bin.primary import PrimaryData
 
 
-with open('model/meta/variables.json', 'r') as f:
-   data = json.load(f)
-
-print(data)
-
-f = open('model/meta/variables.txt', 'r')
-print(json(f))
+with open('meta/variables.json') as d:
+    variables = json.load(d)
+    FIRST_RUN = variables['FIRST_RUN']
+    FIRST_YEAR = variables['FIRST_YEAR']
 
 
 if FIRST_RUN:
 
-    print("\n> Hi! This is your first run! Welcome! \n\nLet's check your local python configuration. \n\n< Press enter to proceed.")
-
+    print("\n> Hi! This is your first run! Welcome! \n\nLet's check your local python configuration.")
     # confirm
-    input()
+    input("\n\n> Press Enter to proceed or Ctrl-C to exit \n\n>>> ")
+
     try:
+        print('\n')
         os.system("python --version")
         print('installed.\n')
 
-        os.system("pip3 --version")
-        os.system("pip install --upgrade pip")
-
-        
-        os.system("\npip install requirements.txt ")
+        ans = input('\nDo you want to install/update program dependencies? \n\n(y) yes or (n) no \n\n >>> ')
+        if ans.__contains__('y'):
+            print('\nupdating pip...\n')
+            os.system("pip3 --version")
+            os.system("pip3 install --upgrade pip")
+            print('\ninstalling requiered dependencies...\n')
+            os.system("pip3 install requirements.txt ")
     except:
-        print("\n> Please, install latest Python3 in your system: https://www.python.org/downloads/")
+        print("\nPlease, install latest Python3 in your system: https://www.python.org/downloads/")
 
+    print('\n# \n\n## \n\n\n###')
 
-    print("\n\n> Your local database is empty. You need to download multiple datasets in order to run this model. \n\n> It take time to download and process 17 years of 1 minute data-points for multiple assets.")
-    print("\n> How do you wanna proceed?", "\n  a : Download only last 3 years of data. (1-2 hours) \n  b : Download full history from 2005 (6-12 hours)")
-    input(" insert a or b and press enter \n >>> ")
-    print("so make sure to have a stable internet connection and your laptop pulged in.\n")
+    print("\n\n> Your local database is empty. You need to download multiple datasets in order to run this model. \nIt take time to download and process 17 years of 1 minute data-points for multiple assets.")
+
+    print("""
+> How do you wanna proceed?
+
+    a : Download only last 3 years of data (1-2 hours) 
+    b : Download last 10 years of data (6-12 hours) 
+    c : Download full history since 2005 (12-24 hours)""")
+    
+    ans = input("\n > Insert (a) or (b) or (c) and press Enter \n\n >>> ")
+
+    with open("meta/variables.json") as x:
+        variables = json.load(x)
+
+    if ans.__contains__('a'):
+        variables['FIRST_YEAR'] = datetime.utcnow().year - 3
+
+    elif ans.__contains__('b'):
+        variables['FIRST_YEAR'] = datetime.utcnow().year - 10
+
+    elif ans.__contains__('c'):
+        variables['FIRST_YEAR'] = 2005
+
+    with open("meta/variables.json", "w") as x:
+        json.dump(variables, x)
+
+    print(f"\nDatabase starting year {variables['FIRST_YEAR']}...\n")
+
+    data = PrimaryData()
+    data.checkDB()
+    data.updateDB()
+
+   
+else:
+    print('\n> Checking current database...')
+
+"""
+ print("This process can take more than 12 hours to complete. So be patient, keep the process running. \n\nMake sure to have a stable internet connection and your laptop pulged in.\n")
 
     print("\n")
 
-    import config.config
-
     input('\n<<< Proceed with the above config? press enter to proceed or ctrl-c to exit ')
-else:
-    print('\n> Checking current database...')
+"""
