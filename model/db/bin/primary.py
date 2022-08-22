@@ -42,7 +42,7 @@ class PrimaryData:
         if ( self.missing_years ):
             for year in self.missing_years:
                 path = '../data/'+str(year)+'/'
-                print('\n...creating', year)
+                print('\nDownloading data from', year, '...be patient, it can take a while...\n')
                 Path(path).mkdir(parents=True, exist_ok=True)
                 self.getData( year=year )
                 print('\nCreating mids.csv & spreads.csv of week...', week, year)
@@ -133,7 +133,7 @@ class PrimaryData:
             if monday.weekday() == 0:
                 mondays[i] = datetime.strftime(monday, '%Y-%m-%d') + 'T00:00:00.000000000Z'
             else:
-                print('Its not a Monday!', i)
+                print('ERROR: Its not a Monday!', i)
 
         wk = start_week-1 # init weeks counter
         
@@ -153,6 +153,7 @@ class PrimaryData:
             # init daily dataframes indices for asks & bids
             asks = pd.DataFrame(index=day_timestamps)
             bids = pd.DataFrame(index=day_timestamps)
+            vols = pd.DataFrame(index=day_timestamps)
 
             # iterate each __universe__.SYMBOL to get a full week data each
             for symbol in self.symbols:
@@ -161,7 +162,7 @@ class PrimaryData:
                 print(symbol, 'week', wk)
 
                 # initialize symbol variable
-                data = { 'dt': [], 'ask': [], 'bid': [] }
+                data = { 'dt': [], 'ask': [], 'bid': [], 'volume': []}
                 start_date = monday
                 iterate = True
 
@@ -188,7 +189,7 @@ class PrimaryData:
                             iterate = False
                             break # close week
 
-                        # append to data bid/ask quotes
+                        # append to data bid/ask quotes by datetime
                         data['dt'].append(x['time'])
                         # iterate bid/ask
                         for p in ['ask', 'bid']:
@@ -198,6 +199,9 @@ class PrimaryData:
                             c = float(x[p]['c']) # close
                             # round price = ( o + h + l + 2c ) * 0.2
                             data[p].append( round(( o + h + l + 2*c ) / 5, digits) )
+
+                        # append period trading raw volume
+                        data['volume'].append(x['volume'])
                     
                     if len(data['dt']) > 0:
                     # only for current year: check if there is no more history
@@ -218,12 +222,19 @@ class PrimaryData:
                 _bids = pd.DataFrame(data['bid'], index=data['dt'], columns=[symbol])
                 _bids.index = pd.to_datetime(_bids.index)
 
+                # transform data to volume dataframe
+                _vols = pd.DataFrame(data['volume'], index=data['dt'], columns=[symbol])
+                _vols.index = pd.to_datetime(_vols.index)
+
                 # symbol dataframe to the daily portfolio
                 asks = pd.merge(asks, _asks, how='outer', left_index=True, right_index=True)
+                
                 bids = pd.merge(bids, _bids, how='outer', left_index=True, right_index=True)
 
+                vols = pd.merge(vols, _vols, how='outer', left_index=True, right_index=True)              
+
                 # realese memory
-                del data, _asks, _bids
+                del data, _asks, _bids, _vols
 
             # ^ finished all symbols
 
@@ -235,14 +246,26 @@ class PrimaryData:
             asks.fillna(method='bfill', inplace=True)
             bids.fillna(method='bfill', inplace=True)
 
+            # fill volume nans with 0
+            vols.fillna(0)
+
+            # create mid prices
+            mids = ( asks + bids ) / 2
+            
+            # create spreads in %% pips
+            spreads = ( asks / bids -1 ) * 10_000
+
             # create path ../data/<year>/<week>/
-            path = '../data/'+str(year)+'/'+str(wk)+'/'
+            path = 'db/data/primary/'+str(year)+'/'+str(wk)+'/'
             print('...saving', symbol, 'asks.csv & bids.csv', path)
             Path(path).mkdir(parents=True, exist_ok=True)
 
             # save daily csv into year week folder
             asks.to_csv(path+'asks.csv', index=True)
             bids.to_csv(path+'bids.csv', index=True)
+            vols.to_csv(path+'volumes.csv', index=True)
+            mids.to_csv(path+'mids.csv', index=True)
+            spreads.to_csv(path+'spreads.csv', index=True)
 
             # realese memory
             del asks, bids
