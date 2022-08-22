@@ -41,20 +41,15 @@ class PrimaryData:
         # if missing years download year
         if ( self.missing_years ):
             for year in self.missing_years:
-                path = '../data/'+str(year)+'/'
                 print('\nDownloading data from', year, '...be patient, it can take a while...\n')
-                Path(path).mkdir(parents=True, exist_ok=True)
                 self.getData( year=year )
-                print('\nCreating mids.csv & spreads.csv of week...', week, year)
-
-                    
+                                    
         # if missing weeks download weeks
         if ( self.missing_weeks ):
             for year, weeks in self.missing_weeks.items():
                 for week in weeks:
-                    print('\nUpdating week...', week, year)
+                    print('\nDownloading week...', week, year, '\n')
                     self.getData( year=year, start_week=week, end_week=week )
-                    print('\nCreating mids.csv & spreads.csv of week...', week, year)
         
         print('Primary DB updated!')
         end_time = datetime.utcnow()
@@ -201,7 +196,7 @@ class PrimaryData:
                             data[p].append( round(( o + h + l + 2*c ) / 5, digits) )
 
                         # append period trading raw volume
-                        data['volume'].append(x['volume'])
+                        data['volume'].append(int(x['volume']))
                     
                     if len(data['dt']) > 0:
                     # only for current year: check if there is no more history
