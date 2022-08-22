@@ -144,7 +144,7 @@ class PrimaryData:
 
             # add range frequency to each week
             freq = '1min'
-            if self.timeframe.startswith('S'):
+            if self.timeframe.startswith('S') or self.timeframe.startswith('H'):
                 freq = self.timeframe[::-1]
 
             # get each datetime of the week by timeframe ( default=5seconds )
@@ -247,7 +247,7 @@ class PrimaryData:
             bids.fillna(method='bfill', inplace=True)
 
             # fill volume nans with 0
-            vols.fillna(0)
+            vols.fillna(0, inplace=True)
 
             # create mid prices
             mids = ( asks + bids ) / 2
@@ -255,9 +255,8 @@ class PrimaryData:
             # create spreads in %% pips
             spreads = ( asks / bids -1 ) * 10_000
 
-            # create path ../data/<year>/<week>/
+            # create path ../data/primary/<year>/<week>/
             path = 'db/data/primary/'+str(year)+'/'+str(wk)+'/'
-            print('...saving', symbol, 'asks.csv & bids.csv', path)
             Path(path).mkdir(parents=True, exist_ok=True)
 
             # save daily csv into year week folder
@@ -267,8 +266,10 @@ class PrimaryData:
             mids.to_csv(path+'mids.csv', index=True)
             spreads.to_csv(path+'spreads.csv', index=True)
 
+            print('\n...saving successfully', symbol, 'asks.csv, bids.csv, mids.csv, spreads.csv, volumes.csv in', path, '\n')
+
             # realese memory
-            del asks, bids
+            del asks, bids, vols, mids, spreads
 
         # ^ finished all weeks
 
