@@ -261,7 +261,7 @@ class PrimaryData:
             mids.to_csv(path+'mids.csv', index=True)
             spreads.to_csv(path+'spreads.csv', index=True)
 
-            print('\n...saving successfully', symbol, 'asks.csv, bids.csv, mids.csv, spreads.csv, volumes.csv in', path, '\n')
+            print('\n...saving successfully asks.csv, bids.csv, mids.csv, spreads.csv, volumes.csv in', path, '\n')
 
             # realese memory
             del asks, bids, vols, mids, spreads
