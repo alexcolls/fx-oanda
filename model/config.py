@@ -1,6 +1,8 @@
 
 # model main configuratrion
 
+# if you modify this file make sure to delete your database and download/update data again
+
 # a) select trading universe:
 
 SYMBOLS = [ 'AUD_CAD', 'AUD_CHF', 'AUD_JPY', 'AUD_NZD', 'AUD_USD', 
