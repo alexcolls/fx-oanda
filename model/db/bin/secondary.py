@@ -2,8 +2,10 @@
 
 import numpy as np
 import pandas as pd
-from db.bin.primary import PrimaryData
 from pathlib import Path
+from datetime import datetime
+from db.bin.primary import PrimaryData
+
 
 
 class SecondaryData ( PrimaryData ):
@@ -13,6 +15,31 @@ class SecondaryData ( PrimaryData ):
         self.secondary_path = self.primary_path.replace('primary', 'secondary')
         self.db_path = self.secondary_path
         self.ccys = self.getCcys()
+
+
+    def updateDB ( self ):
+
+        start_time = datetime.utcnow()
+        # if missing years download year
+        if ( self.missing_years ):
+            for year in self.missing_years:
+                for week in range(1, 51):
+                    self.makeData( year=year, week=week )
+                                    
+        # if missing weeks download weeks
+        if ( self.missing_weeks ):
+            for year, weeks in self.missing_weeks.items():
+                for week in weeks:
+                    self.makeData( year=year, week=week )
+        
+        print('\nDB updated!')
+
+        final_time = datetime.utcnow()
+        duration = final_time - start_time
+        print('\nIt took', round(duration.total_seconds()/60/60, 2), 'hours to update the data.')
+
+        return True
+
 
     def getCcys ( self ):
             ccys = []
@@ -26,9 +53,12 @@ class SecondaryData ( PrimaryData ):
             return ccys
 
     
-    def standardizeMids ( self, year, week ):
+    def makeData ( self, year, week ):
 
         in_path = self.primary_path + str(year) +'/'+ str(week) +'/'
+
+        out_path = self.secondary_path + str(year) +'/'+ str(week) +'/'
+        Path(out_path).mkdir(parents=True, exist_ok=True)
 
         # load mid prices
         mids = pd.read_csv(in_path + 'mids.csv', index_col=0)
@@ -36,76 +66,28 @@ class SecondaryData ( PrimaryData ):
         # create portfolio returns (standarize protfolio prices %)
         mids_ = ( np.log(mids) - np.log(mids.iloc[0]) )*100
 
-        out_path = self.secondary_path + str(year) +'/'+ str(week) +'/'
-        Path(out_path).mkdir(parents=True, exist_ok=True)
+        mids_.to_csv(out_path + 'mids_.csv', index=True)
 
-        mids_.to_csv()
+        # create currency indexes 
+        idxs = pd.DataFrame(index=mids.index, columns=self.ccys)
 
-        del mids, mids_
+        for ccy in self.ccys:
+            base_ccys = mids[mids.filter(regex=ccy+'_').columns].apply( lambda x: 1/x ).sum(axis=1)
+            term_ccys = mids[mids.filter(regex='_'+ccy).columns].sum(axis=1)
+            idxs[ccy] = round( 1/ (( base_ccys + term_ccys + 1 ) / len(self.ccys)), 10)
 
-    def createCcysIdxs ( self, )
 
-    def makeData ( year=2020, week=1 ):
+        # standardize weekly currency indexes (%)
+
+        idxs_ = ( np.log(idxs) - np.log(idxs.iloc[0]) )*100
+
+        idxs_.to_csv(out_path + 'idxs_.csv', index=True)
+
+
+        del mids, mids_, idxs, idxs_
+
+
 
         
 
-
-
-        # create currency indexes 
-        idxs = pd.DataFrame(index=mids.index, columns=ccys)
-        idxs_asks = pd.DataFrame(index=asks.index, columns=ccys)
-        idxs_bids = pd.DataFrame(index=asks.index, columns=ccys)
-        for ccy in ccys:
-            #base = mids[mids.filter(regex=ccy+'_').columns].apply( lambda x: 1/x ).sum(axis=1)
-            #term = mids[mids.filter(regex='_'+ccy).columns].sum(axis=1)
-            #idxs[ccy] = round( 1/ (( base + term + 1 ) / (len(ccys)+1)), 10)
-
-            x_asks = asks[asks.filter(regex=ccy+'_').columns].apply( lambda x: 1/x ).sum(axis=1)
-            y_asks = bids[bids.filter(regex='_'+ccy).columns].sum(axis=1)
-            idxs_asks[ccy] = 1/ (( x_asks + y_asks + 1 ) / len(ccys))
-
-            x_bids = bids[bids.filter(regex=ccy+'_').columns].apply( lambda x: 1/x ).sum(axis=1)
-            y_bids = asks[asks.filter(regex='_'+ccy).columns].sum(axis=1)
-            idxs_bids[ccy] = 1/ (( x_bids + y_bids + 1 ) / len(ccys))
-
-        # create currency-idx returns
-        idxs_ = ( np.log(idxs) - np.log(idxs.iloc[0]) )*100
-
-        idxs_asks_ = ( np.log(idxs_asks) - np.log(idxs_asks.iloc[0]) )*100
-        idxs_bids_ = ( np.log(idxs_bids) - np.log(idxs_bids.iloc[0]) )*100
-
-        idxs__ = pd.merge(idxs_asks_, idxs_bids_, how='inner', left_index=True, right_index=True)
-
-        # plot currency returns
-        idxs_.plot(title=f'Currency idx returns % {year}, week {week}').show()
-
-        idxs_asks_.plot(title=f'Currency idx returns % {year}, week {week}').show()
-
-        # create momentum signal
-        mom_ = pd.DataFrame(index=idxs.index, columns=ccys)
-
-        for i in range(10, len(idxs_)):
-            for ccy in ccys:
-                #mom_[ccy][i] = idxs_[ccy][i] - idxs_[ccy][i-1]
-                mom_[ccy][i] = ( idxs_asks[ccy][i] - idxs_asks[ccy][i-1] ) - ( idxs_bids[ccy][i] - idxs_bids[ccy][i-1] )
-
-        mom_.plot(title=f'Momentum % {year}, week {week}', markers=True).show()
-
-
-        asks_ = ( np.log(asks) - np.log(asks.iloc[0]) )*100
-        bids_ = ( np.log(bids) - np.log(bids.iloc[0]) )*100
-
-
-        for ccy in ccys:
-
-            x_asks = asks_[asks_.filter(regex=ccy+'_').columns].sum(axis=1)
-            y_asks = bids_[bids_.filter(regex='_'+ccy).columns].sum(axis=1)
-            idxs_asks[ccy] = ( x_asks - y_asks ) / len(ccys)
-
-            x_bids = bids_[bids_.filter(regex=ccy+'_').columns].sum(axis=1)
-            y_bids = asks_[asks_.filter(regex='_'+ccy).columns].sum(axis=1)
-            idxs_bids[ccy] = ( x_bids - y_bids ) / len(ccys)
-
-
-    idxs_ = pd.merge(idxs_asks, idxs_bids, how='inner', left_index=True, right_index=True)
 

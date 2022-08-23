@@ -1,15 +1,18 @@
 
 import json
 from db.bin.primary import PrimaryData
+from db.bin.secondary import SecondaryData
 
 
-def update_db():
+def updateDB():
 
     with open("meta/variables.json") as x:
         FIRST_YEAR = json.load(x)['FIRST_YEAR']
 
     primaryData = PrimaryData( start_year=FIRST_YEAR )
+    secondaryData = SecondaryData()
 
+    print('\n### PRIMARY DB ###')
     primaryData.checkDB()
 
     if primaryData.missing_weeks or primaryData.missing_years:
@@ -19,6 +22,10 @@ def update_db():
 
         # update DB    
         primaryData.updateDB()
+    
+    print('\n### SECONDARY DB ###\n')
+    secondaryData.checkDB()
+    secondaryData.updateDB()
 
     
 

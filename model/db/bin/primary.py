@@ -50,11 +50,11 @@ class PrimaryData:
                     print('\nDownloading week', week, 'from', year, '\n')
                     self.getData( year=year, start_week=week, end_week=week )
         
-        print('\nPrimary DB updated!')
+        print('\nDB updated!')
 
         final_time = datetime.utcnow()
         duration = final_time - start_time
-        print('\nIt took', round(duration.total_seconds()/60/60, 2), 'hours to update the primary data.')
+        print('\nIt took', round(duration.total_seconds()/60/60, 2), 'hours to update the data.')
 
         return True
   
@@ -98,7 +98,7 @@ class PrimaryData:
 
         # if no asks_bids weeks missing
         if not missing_weeks and  not missing_years:
-            print('\nPrimary DB is fully updated since', self.start_year, '\n')
+            print('\nDB is fully updated since', self.start_year, '\n')
 
         self.missing_years = missing_years
         self.missing_weeks = missing_weeks

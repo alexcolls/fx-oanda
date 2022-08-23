@@ -1,8 +1,9 @@
 
 
 import json
-from datetime import datetime
-from src.update_db import update_db
+from src.update_db import updateDB
+from src.plot_week import plotWeek
+
 
 with open('meta/variables.json') as d:
     variables = json.load(d)
@@ -10,13 +11,22 @@ with open('meta/variables.json') as d:
 
 
 if FIRST_RUN:
-    
-    from src.first_run import first_run
 
-    first_run()    
+    from src.first_run import firstRun
+    firstRun()    
 
 else:
+
+    updateDB()
+
+    ans = input('\nDo you want to plot last week? \n\n>>> ')
+
+    plotWeek(2022,32)
+
+
+
     
-    ans = input('\nDo you want to update the DB')
+
+
 
 

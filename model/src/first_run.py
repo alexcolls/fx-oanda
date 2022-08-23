@@ -4,7 +4,7 @@ import json
 from datetime import datetime
 from src.update_db import update_db
 
-def first_run():
+def firstRun():
 
     print("\n> Hi! This is your first run! Welcome! \n\nLet's check your local python configuration.")
 
