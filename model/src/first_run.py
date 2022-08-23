@@ -42,6 +42,8 @@ def first_run():
     
     ans = input("\n > Insert (a) or (b) or (c) and press Enter \n\n >>> ")
 
+    print("\nThis process can take some time to be completed. So be patient, you can still use your machine but make sure to keep the process running.\nMake sure to have a stable internet connection and your laptop pulged in.\n")
+
     with open("meta/variables.json") as x:
         variables = json.load(x)
 
