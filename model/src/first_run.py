@@ -2,19 +2,23 @@
 import os
 import json
 from datetime import datetime
+from src.update_db import update_db
 
 def first_run():
 
     print("\n> Hi! This is your first run! Welcome! \n\nLet's check your local python configuration.")
+
+    print('\n\n### INSTALLATION ###')
+
     # confirm
-    input("\n\n> Press Enter to proceed or Ctrl-C to exit \n\n>>> ")
+    input("\n> Press Enter to proceed or Ctrl-C to exit \n\n>>> ")
 
     try:
         print('\n')
         os.system("python --version")
         print('installed.\n')
 
-        ans = input('\nDo you want to install/update program dependencies? \n\n(y) yes or (n) no \n\n >>> ')
+        ans = input('\nDo you want to install/update python dependencies? (recommended)\n\n(y) yes or (n) no \n\n >>> ')
         if ans.__contains__('y'):
             print('\nupdating pip...\n')
             os.system("pip3 --version")
@@ -24,16 +28,17 @@ def first_run():
     except:
         print("\nPlease, install latest Python3 in your system: https://www.python.org/downloads/")
 
-    print('\n# \n\n## \n\n\n###')
+    print('\n\n\n### DATABASE ###')
 
-    print("\n\n> Your local database is empty. You need to download multiple datasets in order to run this model. \nIt take time to download and process 17 years of 1 minute data-points for multiple assets.")
+    print("\n> Your local database is empty. You need to download multiple datasets in order to run this model. \nIt take time to download and process 17 years of 1 minute data-points for multiple assets.")
 
-    print("""
-> How do you wanna proceed?
+    que = """\n> How do you wanna proceed?
 
-    a : Download only last 3 years of data (1-2 hours) 
-    b : Download last 10 years of data (6-12 hours) 
-    c : Download full history since 2005 (12-24 hours)""")
+        a : Download only last 3 years of data (1-2 hours) 
+        b : Download last 10 years of data (6-12 hours) 
+        c : Download full history since 2005 (12-24 hours)"""
+
+    print(que)
     
     ans = input("\n > Insert (a) or (b) or (c) and press Enter \n\n >>> ")
 
@@ -53,3 +58,15 @@ def first_run():
         json.dump(variables, x)
 
     print(f"\nDatabase starting year {variables['FIRST_YEAR']}...\n")
+
+    update_db()
+
+    variables['FIRST_RUN'] = False
+    with open("meta/variables.json", "w") as x:
+        json.dump(variables, x)
+
+    print('\nRun again the program in order to execute the model...\n')
+
+
+
+

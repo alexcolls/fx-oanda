@@ -51,9 +51,11 @@ class PrimaryData:
                     print('\nDownloading week', week, 'from', year, '\n')
                     self.getData( year=year, start_week=week, end_week=week )
         
-        print('Primary DB updated!')
-        end_time = datetime.utcnow()
-        print('It took:', start_time - end_time)
+        print('\nPrimary DB updated!')
+
+        final_time = datetime.utcnow()
+        duration = final_time - start_time
+        print('\nIt took', round(duration.total_seconds()/60/60, 2), 'hours to update the primary data.')
 
         return True
   
@@ -154,7 +156,7 @@ class PrimaryData:
             for symbol in self.symbols:
 
                 # print symbol and week of the year
-                print(symbol, 'week', wk)
+                print(symbol)
 
                 # initialize symbol variable
                 data = { 'dt': [], 'ask': [], 'bid': [], 'volume': []}

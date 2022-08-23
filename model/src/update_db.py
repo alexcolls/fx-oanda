@@ -1,23 +1,21 @@
 
 import json
 from datetime import datetime
-
-
 from db.bin.primary import PrimaryData
+
 
 def update_db():
 
-    primaryData = PrimaryData()
+    with open("meta/variables.json") as x:
+        FIRST_YEAR = json.load(x)['FIRST_YEAR']
 
-    primaryData.checkDB()
+    primaryData = PrimaryData( start_year=FIRST_YEAR )
 
-    input("\nUpdate primary database?\n> Press Enter to proceed\n\n>>> ")
+    # user confirmation
+    input('\nUpdate primary database?\n> Press Enter to proceed\n\n>>> ')
 
-    # update DB
-    start_time = datetime.utcnow()
-    print('\nUpdating database... starting UTC time: ', start_time)
+    # update DB    
     primaryData.updateDB()
 
-    final_time = datetime.utcnow()
-    print(start_time, final_time)
-    primaryData.checkDB()
+    
+
