@@ -2,7 +2,7 @@
 import os
 import json
 from datetime import datetime
-from src.update_db import updateDB
+from db.bin.update_db import updateDB
 
 def firstRun():
 
@@ -42,7 +42,7 @@ def firstRun():
     
     ans = input("\n > Insert (a) or (b) or (c) and press Enter \n\n >>> ")
 
-    print("\n This process can take some time to be completed. So be patient, you can still use your machine but make sure to keep the process running. A stable internet connection and your laptop pulged in is recommended. If the process fails, just run it again.\n")
+    print("\nThis process can take some time to be completed. So be patient, you can still use your machine but make sure to keep the process running. A stable internet connection and your laptop pulged in is recommended. If the process fails, just run it again.\n")
 
     with open("meta/variables.json") as x:
         variables = json.load(x)

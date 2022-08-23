@@ -27,5 +27,7 @@ def updateDB():
     secondaryData.checkDB()
     secondaryData.updateDB()
 
-    
+
+if __name__ == "__main__":
+    updateDB()
 

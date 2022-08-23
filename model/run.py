@@ -1,7 +1,7 @@
 
 
 import json
-from src.update_db import updateDB
+from db.bin.update_db import updateDB
 from src.plot_week import plotWeek
 
 
