@@ -26,13 +26,12 @@ class PrimaryData:
     def __init__ ( self, start_year=FIRST_YEAR, symbols=SYMBOLS, timeframe=TIMEFRAME ):
         
         # quotes granularity default=5_second_bars
+        self.symbols = symbols
         self.timeframe = timeframe
         self.start_year = int(start_year)
-        self.db_path = 'db/data/primary/'
-        self.missing_years, self.missing_weeks, self.current_week = self.checkDB()
-        self.symbols = symbols
-        self.files = ['asks.csv', 'bids.csv', 'mids.csv', 'spreads.csv', 'ccys.csv']
-    
+        self.primary_path = 'db/data/primary/'
+        self.db_path = self.primary_path
+        
 
     ## update data of primary db missing years & weeks
     def updateDB ( self ):
@@ -60,7 +59,7 @@ class PrimaryData:
         return True
   
 
-    ## check missing weeks & years in data/asks_bids since <year> default=2005
+    ## check missing weeks & years in data/asks_bids since <year>
     def checkDB ( self ):
 
         # check missing years since <start_year>
@@ -76,7 +75,7 @@ class PrimaryData:
         current_week = ( datetime.utcnow() - current_week ) / timedelta(weeks=1)
         current_week = int(current_week)
 
-        # iterate each folder of data/<year>/<week>/
+        # iterate each folder of db/data/primary/<year>/<week>/
         years_db = os.listdir(self.db_path)
         for year in years:
             if not str(year) in years_db:
@@ -94,18 +93,18 @@ class PrimaryData:
                         print('Missing week:', week, 'from', year)
                         missing_weeks[year].append(week)                              
 
-
         # delete empty keys
         missing_weeks = dict( [ (k,v) for k, v in missing_weeks.items() if len(v) > 0 ] )
 
         # if no asks_bids weeks missing
         if not missing_weeks and  not missing_years:
             print('\nPrimary DB is fully updated since', self.start_year, '\n')
-        
-        return missing_years, missing_weeks, current_week
+
+        self.missing_years = missing_years
+        self.missing_weeks = missing_weeks
+        self.current_week = current_week
 
 
-    
     ##_ PrimaryData.getData(2022)
         """ 
             1. download candles (bid/ask), min granularity = 5 seconds
@@ -253,17 +252,17 @@ class PrimaryData:
             spreads = ( asks / bids -1 ) * 10_000
 
             # create path ../data/primary/<year>/<week>/
-            path = 'db/data/primary/'+str(year)+'/'+str(wk)+'/'
-            Path(path).mkdir(parents=True, exist_ok=True)
+            out_path = self.primary_path + str(year) +'/'+ str(wk) +'/'
+            Path(out_path).mkdir(parents=True, exist_ok=True)
 
             # save daily csv into year week folder
-            asks.to_csv(path+'asks.csv', index=True)
-            bids.to_csv(path+'bids.csv', index=True)
-            vols.to_csv(path+'volumes.csv', index=True)
-            mids.to_csv(path+'mids.csv', index=True)
-            spreads.to_csv(path+'spreads.csv', index=True)
+            asks.to_csv(out_path + 'asks.csv', index=True)
+            bids.to_csv(out_path + 'bids.csv', index=True)
+            vols.to_csv(out_path + 'volumes.csv', index=True)
+            mids.to_csv(out_path + 'mids.csv', index=True)
+            spreads.to_csv(out_path + 'spreads.csv', index=True)
 
-            print('\n...saving successfully asks.csv, bids.csv, mids.csv, spreads.csv, volumes.csv in', path, '\n')
+            print('\n...saving successfully asks.csv, bids.csv, mids.csv, spreads.csv, volumes.csv in', out_path, '\n')
 
             # realese memory
             del asks, bids, vols, mids, spreads
