@@ -71,4 +71,6 @@ def firstRun():
 
 
 
+if __name__ == "__main__":
+    firstRun()
 
