@@ -2,16 +2,16 @@
 import os
 import json
 from datetime import datetime
-from src.update_db import update_db
+from src.update_db import updateDB
 
 def firstRun():
 
-    print("\n> Hi! This is your first run! Welcome! \n\nLet's check your local python configuration.")
+    print("\n > Hi! This is your first run! Welcome! \n\nLet's check your local python configuration.")
 
-    print('\n\n### INSTALLATION ###')
+    print('\n\n ### INSTALLATION ###')
 
     # confirm
-    input("\n> Press Enter to proceed or Ctrl-C to exit \n\n>>> ")
+    input("\n > Press Enter to proceed or Ctrl-C to exit \n\n>>> ")
 
     try:
         print('\n')
@@ -28,11 +28,11 @@ def firstRun():
     except:
         print("\nPlease, install latest Python3 in your system: https://www.python.org/downloads/")
 
-    print('\n\n\n### DATABASE ###')
+    print('\n\n\n ### DATABASE ###')
 
-    print("\n> Your local database is empty. You need to download multiple datasets in order to run this model. \nIt take time to download and process 17 years of 1 minute data-points for multiple assets.")
+    print("\n > Your local database is empty. You need to download multiple datasets in order to run this model. \nIt take time to download and process 17 years of 1 minute data-points for multiple assets.")
 
-    que = """\n> How do you wanna proceed?
+    que = """\n > How do you wanna proceed?
 
         a : Download only last 3 years of data (1-2 hours) 
         b : Download last 10 years of data (6-12 hours) 
@@ -42,7 +42,7 @@ def firstRun():
     
     ans = input("\n > Insert (a) or (b) or (c) and press Enter \n\n >>> ")
 
-    print("\nThis process can take some time to be completed. So be patient, you can still use your machine but make sure to keep the process running.\nMake sure to have a stable internet connection and your laptop pulged in.\n")
+    print("\n This process can take some time to be completed. So be patient, you can still use your machine but make sure to keep the process running. A stable internet connection and your laptop pulged in is recommended. If the process fails, just run it again.\n")
 
     with open("meta/variables.json") as x:
         variables = json.load(x)
@@ -61,7 +61,7 @@ def firstRun():
 
     print(f"\nDatabase starting year {variables['FIRST_YEAR']}...\n")
 
-    update_db()
+    updateDB()
 
     variables['FIRST_RUN'] = False
     with open("meta/variables.json", "w") as x:

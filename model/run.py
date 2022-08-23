@@ -19,7 +19,7 @@ else:
 
     updateDB()
 
-    ans = input('\nDo you want to plot last week? \n\n>>> ')
+    ans = input('\n Do you want to plot last week? \n\n >>> ')
 
     plotWeek(2022,32)
 
