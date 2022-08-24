@@ -13,7 +13,7 @@ from zipfile import ZipFile
 def cot_bulk_downloader():
     """ Downloads all standard Commitment of Traders Futures only reports. """
     url = 'https://www.cftc.gov/MarketReports/CommitmentsofTraders/HistoricalCompressed/index.htm'
-    out_path = Path.cwd() / 'data-sets' / 'commitments-of-traders'
+    out_path = Path.cwd() / 'cots_raw'
     if out_path.exists():  # avoid re-downloading the script if the files have already been downloaded
         return 0
     os.makedirs(out_path, exist_ok=True)
