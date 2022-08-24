@@ -88,11 +88,11 @@ def selectWeek( year, week, filter_order=8, cutoff_freq=0.01  ):
     # plot spreads (%%) pips
     spreads_ = pd.read_csv('db/data/primary/' + str(year) +'/'+ str(week) +'/'+ 'spreads.csv', index_col=0)
     spreads_.index = pd.to_datetime(spreads_.index)
-    spreads_plt = px.line(spreads_, height=600)
+    spreads_plt = px.line(spreads_, height=400)
 
     # plot raw volumes
     volumes_ = pd.read_csv('db/data/primary/' + str(year) +'/'+ str(week) +'/'+ 'volumes.csv', index_col=0)
-    volumes_plt = px.line(volumes_, height=600)
+    volumes_plt = px.line(volumes_, height=400)
 
     # plot idxs returns
     idxs_ = pd.read_csv('db/data/secondary/' + str(year) +'/'+ str(week) +'/'+ 'idxs_.csv', index_col=0)
@@ -115,7 +115,7 @@ def selectWeek( year, week, filter_order=8, cutoff_freq=0.01  ):
     idxs_plt = px.line( idxs_lp, height=800)
 
     noise_ = idxs_ - lowpass_
-    noise_plt = px.line(noise_, height=400)
+    noise_plt = px.line(noise_, height=600)
 
     """
     # plot idxs returns
@@ -136,7 +136,7 @@ def selectWeek( year, week, filter_order=8, cutoff_freq=0.01  ):
         for ccy in idxs_.columns:
             trend_[ccy][i] = ( lowpass_[ccy][i] - lowpass_[ccy][i-1] )
 
-    trend_plt = px.line(trend_, height=400)
+    trend_plt = px.line(trend_, height=600)
     
 
     return mids_plt, spreads_plt, volumes_plt, idxs_plt, noise_plt, trend_plt
