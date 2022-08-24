@@ -1,5 +1,5 @@
 
-# model main configuratrion
+### MODEL MAIN CONFIGURATION
 
 # if you modify this file make sure to delete your database and download/update data again
 

@@ -1,4 +1,6 @@
 
+# author: Quantium Rock
+# license: MIT
 
 import os, shutil
 

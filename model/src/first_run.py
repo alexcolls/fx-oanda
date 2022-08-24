@@ -1,4 +1,7 @@
 
+# author: Quantium Rock
+# license: MIT
+
 import os
 import json
 from datetime import datetime

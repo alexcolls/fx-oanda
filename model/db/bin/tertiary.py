@@ -1,4 +1,7 @@
 
+# author: Quantium Rock
+# license: MIT
+
 import numpy as np
 import pandas as pd
 from db.bin.secondary import SecondaryData

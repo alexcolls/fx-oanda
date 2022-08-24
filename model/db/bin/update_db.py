@@ -1,4 +1,7 @@
 
+# author: Quantium Rock
+# license: MIT
+
 import json
 from db.bin.primary import PrimaryData
 from db.bin.secondary import SecondaryData

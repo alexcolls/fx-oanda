@@ -1,24 +1,28 @@
 
+### MAIN RUNNER
+
 import os
 import json
 from db.bin.update_db import updateDB
 
-with open('meta/variables.json') as d:
-    variables = json.load(d)
-    FIRST_RUN = variables['FIRST_RUN']
+if __name__ == "__main__":
 
-if FIRST_RUN:
+    with open('meta/variables.json') as d:
+        variables = json.load(d)
+        FIRST_RUN = variables['FIRST_RUN']
 
-    from src.first_run import firstRun
-    firstRun()    
+    if FIRST_RUN:
 
-else:
+        from src.first_run import firstRun
+        firstRun()    
 
-    updateDB()
+    else:
 
-    ans = input('\n> Do you want to open the model dashboard \n\n >>> Press Enter \n ')
+        updateDB()
 
-    os.system("python src/_dash.py")
+        ans = input('\n> Do you want to open the model dashboard \n\n >>> Press Enter \n ')
+
+        os.system("python src/_dash.py")
 
 
 
