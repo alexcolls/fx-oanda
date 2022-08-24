@@ -2,13 +2,10 @@
 import os
 import json
 from db.bin.update_db import updateDB
-from src.plot_week import plotWeek
-
 
 with open('meta/variables.json') as d:
     variables = json.load(d)
     FIRST_RUN = variables['FIRST_RUN']
-
 
 if FIRST_RUN:
 
