@@ -1,7 +1,13 @@
-# cot_yearly_analysis.py
 
-# Compute and plot net positions for speculators and commercials in EUR/USD Futures against weekly spot equivalent.
-# This script should be executed after the cot_downloader.py, otherwise unzip individual CoT reports manually
+# CONCAT FULL HISTORY OF G8 CURRENCIES COT POSITIONS BETWEEN SPECULATORS & COMMERCIALS
+
+# author: Quantium Rock
+# license: MIT
+# date: August 2022
+
+"""
+    The Commodity Futures Trading Commission (US Derivatives Trading Commission or CFTC) publishes the Commitments of Traders (COT) reports to help the public understand market dynamics. Specifically, the COT reports provide a breakdown of each Tuesday’s open interest for futures and options on futures markets in which 20 or more traders hold positions equal to or above the reporting levels established by the CFTC.
+"""
 
 import pandas as pd
 
@@ -111,3 +117,12 @@ def compute_history():
 cot_spec, cot_comm = compute_history()
 
 print(cot_spec, cot_comm)
+
+
+# TODO
+
+# convert cot_spec and cot_comm in dataframes and save to csv files in db/data
+
+
+
+### END

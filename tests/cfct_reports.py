@@ -1,5 +1,5 @@
 
-# OANDA BROKER REST API
+# SCRAP COMMITMENT OF TRADERS FROM CFTC
 
 # author: Quantium Rock
 # license: MIT
