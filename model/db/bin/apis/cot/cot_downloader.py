@@ -28,7 +28,7 @@ def cot_bulk_downloader():
                 zip_url = 'https://www.cftc.gov/files/dea/history/' + filename
                 req = requests.get(zip_url, stream=True)
                 if req.status_code == requests.codes.ok:
-                    if filename.__contains__('2004'):
+                    if filename.__contains__('2003'):
                         break
                     print(f'Downloading {filename} . . .')
                     with open(out_name, 'wb') as f:
@@ -55,7 +55,7 @@ if __name__ == '__main__':
     try:
         return_val = cot_bulk_downloader()
         if return_val == 0:  # hunky-dory so proceed to unzip
-            cot_dir = Path.cwd() / 'data-sets' / 'commitments-of-traders'  # path created by bulk downloader so no I/O error 
+            cot_dir = Path.cwd() / 'cots_raw'  # path created by bulk downloader so no I/O error 
             bulk_unzipper(cot_dir)
     except Exception as exception:
         print(f'Unexpected error: {exception}')
