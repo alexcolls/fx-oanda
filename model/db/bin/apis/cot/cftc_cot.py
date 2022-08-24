@@ -19,7 +19,6 @@ from bokeh.io import output_file
 from bokeh.layouts import column
 
 
-
 def cot_bulk_downloader():
     """ Downloads all standard Commitment of Traders Futures only reports. """
     url = 'https://www.cftc.gov/MarketReports/CommitmentsofTraders/HistoricalCompressed/index.htm'
@@ -38,6 +37,8 @@ def cot_bulk_downloader():
                 zip_url = 'https://www.cftc.gov/files/dea/history/' + filename
                 req = requests.get(zip_url, stream=True)
                 if req.status_code == requests.codes.ok:
+                    if filename.__contains__('2004'):
+                        break
                     print(f'Downloading {filename} . . .')
                     with open(out_name, 'wb') as f:
                         for chunk in req.iter_content():
@@ -237,11 +238,3 @@ def generic_time_series(x, y, filename='', **kwargs):
     else:
         show(p)
 
-if __name__ == '__main__':
-    try:
-        return_val = cot_bulk_downloader()
-        if return_val == 0:  # hunky-dory so proceed to unzip
-            cot_dir = Path.cwd() / 'data-sets' / 'commitments-of-traders'  # path created by bulk downloader so no I/O error 
-            bulk_unzipper(cot_dir)
-    except Exception as exception:
-        print(f'Unexpected error: {exception}')
