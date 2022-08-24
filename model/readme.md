@@ -1,4 +1,4 @@
 
 > python3 run.py 
 
-ollow instructions on terminal
+follow instructions on terminal.
