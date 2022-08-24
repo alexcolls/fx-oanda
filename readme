@@ -1,12 +1,19 @@
 
-FX G10 Trading Index Model with Oanda Broker
+# FX G8 Model with Oanda broker
 
-1. model
+Install & Run
 
-In the model folder you'll find the strategy backtesting.
+> git clone https://github.com/quantium-rock/fx-oanda
 
-2. bin
+> cd fx-oanda/model
 
-In the bin folder you'll find the trading system.
+> python3 run.py
 
-WARNING: If you are trading in a real account make sure you know what you are doing. All gains or losses caused by the system will be under your responsability.
+...follow terminal instructions
+
+
+
+
+
+
+

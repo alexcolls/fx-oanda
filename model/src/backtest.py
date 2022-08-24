@@ -1,0 +1,6 @@
+
+# CREATE TRADING SIGNALS AND BACKTEST THEM
+
+
+import pandas as pd
+

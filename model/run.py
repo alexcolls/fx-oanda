@@ -1,5 +1,5 @@
 
-
+import os
 import json
 from db.bin.update_db import updateDB
 from src.plot_week import plotWeek
@@ -19,9 +19,10 @@ else:
 
     updateDB()
 
-    ans = input('\n Do you want to plot last week? \n\n >>> ')
+    ans = input('\n> Do you want to open the model dashboard \n\n >>> Press Enter \n ')
 
-    plotWeek(2022,32)
+    os.system("python src/_dash.py")
+
 
 
 

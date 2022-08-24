@@ -9,7 +9,7 @@ import pandas as pd
 from src.functions import LowPass
 
 
-years = [ 2019, 2020, 2021, 2022 ]
+years = [ 2022, 2021, 2020, 2019 ]
 weeks = range( 1, 52 )
 
 # create the Dash app

@@ -23,7 +23,7 @@ def updateDB():
         # update DB    
         primaryData.updateDB()
     
-    print('\n### SECONDARY DB ###\n')
+    print('\n### SECONDARY DB ###')
     secondaryData.checkDB()
     secondaryData.updateDB()
 
