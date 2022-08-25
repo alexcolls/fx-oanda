@@ -85,7 +85,7 @@ class PrimaryData:
             else: # if year exsits
                 weeks_db = os.listdir(self.db_path + str(year))
                 # if current year
-                wks = current_week if year == current_year else 52
+                wks = current_week if year == current_year+1 else 52
                 missing_weeks[year] = []
                 for week in range(1, wks):
                     if not str(week) in weeks_db:
