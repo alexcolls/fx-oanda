@@ -117,5 +117,3 @@ print(cot_spec, cot_comm)
 # convert cot_spec and cot_comm in dataframes and save to csv files in db/data
 
 
-
-### END
