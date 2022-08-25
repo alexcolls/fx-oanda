@@ -1,4 +1,6 @@
 
+# author: Quantium Rock
+# license: MIT
 
 import pandas as pd
 import plotly.express as px
@@ -54,7 +56,7 @@ def Sigma_1( year=2022, week=1 ):
             rets_[sym][tim] = mids_[sym][tim] - mids_[sym][last_tim]
             last_tim = tim
 
-    px.line(rets_).show()
+    #px.line(rets_).show()
             
     # currency indexes signals
     idxs_sigs = pd.DataFrame(index=idxs_.index, columns=idxs_.columns)
@@ -81,7 +83,7 @@ def Sigma_1( year=2022, week=1 ):
             else:
                 assets_sigs[sym][tim] = 0
 
-    px.line(assets_sigs).show()
+    #px.line(assets_sigs).show()
 
 
     # backtest assets signals by asset
@@ -99,13 +101,25 @@ def Sigma_1( year=2022, week=1 ):
                 
     sigmas = sigmas.cumsum()
 
-    total_equity = sigmas.sum(axis=1) / len(symbols)
+    # import spreads 
+    spreads_ = pd.read_csv('db/data/primary/' + str(year) +'/'+ str(week) +'/'+ 'spreads.csv', index_col=0)
+    spreads_ = ( spreads_ / 10000 ).sum(axis=1)
+
+    brute_equity = sigmas.sum(axis=1) / len(symbols)
+
+    net_equity = brute_equity - spreads_ 
+    net_equity = net_equity.sum(axis=1) / len(symbols)
+
+    equities = {
+        'net': net_equity,
+        'brute': brute_equity
+    }
 
     px.line(sigmas).show()
-    px.line(total_equity).show()
+    px.line(brute_equity).show()
 
     return 0
 
 
 if __name__ == '__main__':
-    Sigma_1(2022,32)
+    Sigma_1(2022,31)
