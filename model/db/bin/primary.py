@@ -18,7 +18,7 @@ with open("env/variables.json") as x:
     FIRST_YEAR = json.load(x)['FIRST_YEAR']
 
 
-### PrimaryData -> ../data/<year>/<week>/:
+### PrimaryData -> ../data/primary/<year>/<week>/:
 #   asks.csv, bids.csv, mids.csv, spreads.csv, volumes.csv
 class PrimaryData:
 
