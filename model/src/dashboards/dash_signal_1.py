@@ -2,8 +2,13 @@
 # author: Quantium Rock
 # license: MIT
 
-import pandas as pd
+import dash
+import dash_html_components as html
+import dash_core_components as dcc
+from dash.dependencies import Input, Output
 import plotly.express as px
+import pandas as pd
+import os
 
 from src.functions import LowPass
 # LowPass filter params
@@ -13,7 +18,98 @@ cutoff_freq = 0.01
 # Momentum threshold params
 slope_threshold = 0.001
 
-def Sigma_1( year=2022, week=1 ):
+def dropDown():
+    drop_down = {}
+
+    db_path = 'db/data/primary/'
+    years = os.listdir(db_path)
+    for yr in years:
+        try:
+            drop_down[int(yr)] = []
+            weeks = os.listdir(db_path+yr)
+            for wk in weeks:
+                try:
+                    drop_down[int(yr)].append(int(wk))
+                except:
+                    continue
+            drop_down[int(yr)].sort()
+        except:
+            continue        
+
+    current_year = list(dropDown.keys())[0]
+
+    return drop_down, current_year
+
+dop_down, current_year = dropDown()
+
+# create the Dash app
+app = dash.Dash('Model Dashboard')
+
+params = [ 'Year', 'Week' ]
+
+# set up the app layout
+app.layout = html.Div(style={'margin': '80px'}, children=[
+
+    html.H1(children='MODEL DASHBOARD'),
+
+    html.H3(children='Select year: '),
+
+    dcc.Dropdown(id='year', options=[ {'label': yr, 'value': yr} for yr in dop_down.keys() ], value=current_year),
+
+    html.H3(children='Select week: '),
+
+    dcc.Dropdown(id='week', options=[{'label': wk, 'value': wk} for wk in dop_down[current_year] ], value=dop_down[current_year][-1]),
+
+    html.H2(style={ 'margin-top': '50px'}, children='Market logarithmic returns (%)'),
+
+        dcc.Graph(id='chart-mids'),
+
+        html.H4(children='Spreads in pips (%%)'),
+
+        dcc.Graph(id='chart-spreads'),
+
+        html.H4(children='Raw Traded Volumes'),
+
+        dcc.Graph(id='chart-volumes'),
+
+    html.H2(children='Market dimensional reduction to Currency Indexes (%)'),
+
+        html.H4(children='Currency logarithmic returns + LowPass Filter (filter_order=8, cutoff_freq=0.01)'),
+
+        dcc.Graph(id='chart-idxs'),
+
+        #dcc.Slider(id='filter_order'),
+        #dcc.Slider(id='cutoff_freq'),
+
+        html.H4(children='Low Frequency Momentum (LP slope = log(LP[0]) - log(LP[1]) )'),
+
+        dcc.Graph(id='chart-trend'),
+
+        html.H4(children='High Frequency Noise (LP deviations = log(value[0]) - log(LP[0]) )'),
+
+        dcc.Graph(id='chart-noise'),
+        
+])
+
+# set up callback function
+@ app.callback(
+
+    Output(component_id='chart-mids', component_property='figure'),
+    Output(component_id='chart-spreads', component_property='figure'),
+    Output(component_id='chart-volumes', component_property='figure'),
+
+    Output(component_id='chart-idxs', component_property='figure'),
+    Output(component_id='chart-trend', component_property='figure'),
+    Output(component_id='chart-noise', component_property='figure'),
+
+    Input(component_id='year', component_property='value'),
+    Input(component_id='week', component_property='value'),
+
+    #Input(component_id='filter_order', component_property='value'),
+    #Input(component_id='cutoff_freq', component_property='value')
+
+)
+def selectWeek( year, week, filter_order=8, cutoff_freq=0.01  ):
 
     mids_ = pd.read_csv('db/data/secondary/' + str(year) +'/'+ str(week) +'/'+ 'mids_.csv', index_col=0)
 
@@ -39,12 +135,10 @@ def Sigma_1( year=2022, week=1 ):
     idxs_plt.show() 
     trend_plt.show()
 
-
     timestamps = idxs_.index
     ccys = idxs_.columns
     thr = slope_threshold
     symbols = mids_.columns
-
 
     # create assets returns by timeframe
 
@@ -85,7 +179,6 @@ def Sigma_1( year=2022, week=1 ):
 
     #px.line(assets_sigs).show()
 
-
     # backtest assets signals by asset
 
     sigmas = pd.DataFrame(index=timestamps, columns=symbols)
@@ -109,13 +202,12 @@ def Sigma_1( year=2022, week=1 ):
     #net_equity = brute_equity - spreads_ 
     #net_equity = net_equity.sum(axis=1) / len(symbols)
 
-
-
     px.line(sigmas).show()
     px.line(brute_equity).show()
 
     return 0
 
 
+# run local server
 if __name__ == '__main__':
-    Sigma_1(2022,31)
+    app.run_server(debug=True)

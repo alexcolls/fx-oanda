@@ -85,7 +85,7 @@ class PrimaryData:
             else: # if year exsits
                 weeks_db = os.listdir(self.db_path + str(year))
                 # if current year
-                wks = current_week if year == current_year+1 else 52
+                wks = current_week+2 if year == current_year else 52
                 missing_weeks[year] = []
                 for week in range(1, wks):
                     if not str(week) in weeks_db:
@@ -169,14 +169,15 @@ class PrimaryData:
                     req = oanda_api.getRawCandles( symbol, self.timeframe, start_date )
 
                     # print first date and last date of the request
-                    print(req[0]['time'][:19], req[-1]['time'][:19])
+                    try:
+                        print(req[0]['time'][:19], req[-1]['time'][:19])
+                    except: pass
 
                     # get the number of decimals of instrument's price
                     digits = 5
                     try:
                         digits = len(req[0]['ask']['c'].split('.')[1])
-                    except:
-                        pass
+                    except: pass
 
                     # iterate each candle
                     for x in req:

@@ -20,9 +20,9 @@ if __name__ == "__main__":
 
         updateDB()
 
-        ans = input('\n> Do you want to open the model dashboard \n\n >>> Press Enter \n ')
+        ans = input('\n> Do you want to open the model dashboard? \n\n >>> Press Enter \n ')
 
-        os.system("python src/_dash.py")
+        os.system("python src/dashboards/dash_market.py")
 
 
 
