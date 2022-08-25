@@ -78,15 +78,8 @@ def compute_history():
                         'NZD': [],
                     }
 
-    hedgers =  {    'AUD': [],
-                    'CAD': [],
-                    'CHF': [],    
-                    'EUR': [],
-                    'GBP': [],
-                    'JPY': [],
-                    'NZD': [],
-                }
-
+    hedgers = speculators.copy()
+    
     data_sets = Path.cwd() / 'model/db/bin/apis/cot/'
     cot_reports = data_sets / 'cots_raw' 
 
