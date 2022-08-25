@@ -11,8 +11,8 @@ from datetime import timedelta
 
 # import Oanda api & instruments
 from db.bin.apis.oanda_api import OandaApi
-from config import SYMBOLS
-from config import TIMEFRAME
+from model.config import SYMBOLS
+from model.config import TIMEFRAME
 
 with open("meta/variables.json") as x:
     FIRST_YEAR = json.load(x)['FIRST_YEAR']
@@ -129,7 +129,7 @@ class PrimaryData:
             if monday.weekday() == 0:
                 mondays[i] = datetime.strftime(monday, '%Y-%m-%d') + 'T00:00:00.000000000Z'
             else:
-                print('ERROR: Its not a Monday!', i)
+                raise Exception('ERROR: Its not a Monday!', i)
 
         wk = start_week-1 # init weeks counter
         
