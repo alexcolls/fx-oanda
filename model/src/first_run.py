@@ -47,7 +47,7 @@ def firstRun():
 
     print("\nThis process can take some time to be completed. So be patient, you can still use your machine but make sure to keep the process running. A stable internet connection and your laptop pulged in is recommended. If the process fails, just run it again.\n")
 
-    with open("meta/variables.json") as x:
+    with open("env/variables.json") as x:
         variables = json.load(x)
 
     if ans.__contains__('a'):
@@ -59,7 +59,7 @@ def firstRun():
     elif ans.__contains__('c'):
         variables['FIRST_YEAR'] = 2005
 
-    with open("meta/variables.json", "w") as x:
+    with open("env/variables.json", "w") as x:
         json.dump(variables, x)
 
     print(f"\nDatabase starting year {variables['FIRST_YEAR']}...\n")
@@ -67,7 +67,7 @@ def firstRun():
     updateDB()
 
     variables['FIRST_RUN'] = False
-    with open("meta/variables.json", "w") as x:
+    with open("env/variables.json", "w") as x:
         json.dump(variables, x)
 
     print('\nRun again the program in order to execute the model...\n')

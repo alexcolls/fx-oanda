@@ -7,7 +7,7 @@ from db.bin.update_db import updateDB
 
 if __name__ == "__main__":
 
-    with open('meta/variables.json') as d:
+    with open('env/variables.json') as d:
         variables = json.load(d)
         FIRST_RUN = variables['FIRST_RUN']
 

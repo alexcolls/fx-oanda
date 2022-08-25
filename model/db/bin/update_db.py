@@ -9,7 +9,7 @@ from db.bin.secondary import SecondaryData
 
 def updateDB():
 
-    with open("meta/variables.json") as x:
+    with open("env/variables.json") as x:
         FIRST_YEAR = json.load(x)['FIRST_YEAR']
 
     primaryData = PrimaryData( start_year=FIRST_YEAR )

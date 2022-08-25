@@ -21,7 +21,7 @@ app = dash.Dash('Model Dashboard')
 params = [ 'Year', 'Week' ]
 
 # set up the app layout
-app.layout = html.Div(style={ 'margin': '80px'} ,children=[
+app.layout = html.Div(style={'background': 'black', 'color': 'white', 'margin': '80px'} ,children=[
 
     html.H1(children='MODEL DASHBOARD'),
 
@@ -102,35 +102,17 @@ def selectWeek( year, week, filter_order=8, cutoff_freq=0.01  ):
 
     lowpass_, idxs_lp = LowPass( idxs_, filter_order, cutoff_freq  )
 
-    """
-        ln = 60
-        for i in range(ln, len(idxs_)):
-            
-            lowpass_i, _ = LowPass( idxs_.iloc[:i], filter_order, cutoff_freq  )
-            lowpass_i = lowpass_i[0, :]
-
-            for ccy in idxs_.columns:
-                
-                idxs_lp[ccy+'_rt'][i] = lowpass_i[ccy].iloc[0]
-
-    """
-
     idxs_plt = px.line( idxs_lp, height=800)
 
+    # substract singal noise
+
     noise_ = idxs_ - lowpass_
+
+    noise_threshold = 0.1
+
     noise_plt = px.line(noise_, height=600)
-
-    """
-    # plot idxs returns
-    mom_ = pd.DataFrame(index=idxs_.index, columns=idxs_.columns)
-
-    for i in range(2, len(idxs_)):
-        for ccy in idxs_.columns:
-            mom_[ccy][i] = ( idxs_[ccy][i] - idxs_[ccy][i-1] )
-
-    mom_plt = px.line(mom_, height=400)
-
-    """
+    noise_plt.add_hline(y=noise_threshold, line_color='red')
+    noise_plt.add_hline(y=-noise_threshold, line_color='green')    
 
     # trend
     trend_ = pd.DataFrame(index=idxs_.index, columns=idxs_.columns)
@@ -139,7 +121,11 @@ def selectWeek( year, week, filter_order=8, cutoff_freq=0.01  ):
         for ccy in idxs_.columns:
             trend_[ccy][i] = ( lowpass_[ccy][i] - lowpass_[ccy][i-1] )
 
+    slope_threshold = 0.001
+
     trend_plt = px.line(trend_, height=600)
+    trend_plt.add_hline(y=slope_threshold, line_color='green')
+    trend_plt.add_hline(y=-slope_threshold, line_color='red')
     
 
     return mids_plt, spreads_plt, volumes_plt, idxs_plt, noise_plt, trend_plt

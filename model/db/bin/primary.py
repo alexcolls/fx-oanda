@@ -11,10 +11,10 @@ from datetime import timedelta
 
 # import Oanda api & instruments
 from db.bin.apis.oanda_api import OandaApi
-from model.config import SYMBOLS
-from model.config import TIMEFRAME
+from config import SYMBOLS
+from config import TIMEFRAME
 
-with open("meta/variables.json") as x:
+with open("env/variables.json") as x:
     FIRST_YEAR = json.load(x)['FIRST_YEAR']
 
 
