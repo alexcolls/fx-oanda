@@ -62,7 +62,7 @@ app.layout = html.Div(style={'margin': '80px'} ,children=[
 
         dcc.Graph(id='chart-volumes'),
 
-    html.H2(children='Dimensional reduction to currency indexes (%)'),
+    html.H2(children='Market dimensional reduction to Currency Indexes (%)'),
 
         html.H4(children='Currency logarithmic returns + LowPass Filter (filter_order=8, cutoff_freq=0.01)'),
 
@@ -71,11 +71,11 @@ app.layout = html.Div(style={'margin': '80px'} ,children=[
         #dcc.Slider(id='filter_order'),
         #dcc.Slider(id='cutoff_freq'),
 
-        html.H4(children='Low Frequency Momentum (LP slope)'),
+        html.H4(children='Low Frequency Momentum (LP slope = log(LP[0]) - log(LP[1]) )'),
 
         dcc.Graph(id='chart-trend'),
 
-        html.H4(children='High Frequency Noise (LP deviation)'),
+        html.H4(children='High Frequency Noise (LP deviations = log(value[0]) - log(LP[0]) )'),
 
         dcc.Graph(id='chart-noise'),
         
@@ -108,11 +108,11 @@ def selectWeek( year, week, filter_order=8, cutoff_freq=0.01  ):
     # plot spreads (%%) pips
     spreads_ = pd.read_csv('db/data/primary/' + str(year) +'/'+ str(week) +'/'+ 'spreads.csv', index_col=0)
     spreads_.index = pd.to_datetime(spreads_.index)
-    spreads_plt = px.line(spreads_, height=200)
+    spreads_plt = px.line(spreads_, height=300)
 
     # plot raw volumes
     volumes_ = pd.read_csv('db/data/primary/' + str(year) +'/'+ str(week) +'/'+ 'volumes.csv', index_col=0)
-    volumes_plt = px.line(volumes_, height=200)
+    volumes_plt = px.line(volumes_, height=300)
 
     # plot idxs returns
     idxs_ = pd.read_csv('db/data/secondary/' + str(year) +'/'+ str(week) +'/'+ 'idxs_.csv', index_col=0)
